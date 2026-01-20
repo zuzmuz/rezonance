@@ -1,0 +1,18 @@
+[project]
+name = "rezonance"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = "==3.14.*"
+dependencies = [
+    'numpy==2.3.*',
+    'scikit-learn==1.8.*',
+    'torch==2.9.*',
+    'matplotlib',
+    'sounddevice',
+]
+
+[tool.ruff]
+exclude = [".venv"]
+line-length = 70
+indent-width = 4
