@@ -1,32 +1,29 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import sounddevice as sd
-from src.generator import SpectrumGenerator
+
+from src.generator import Synthesizer
+from src.music import Melody, Note
 
 
 def main():
-    s = SpectrumGenerator(
-        sample_rate=np.float32(16_000),
-        buffer_size=np.int16(1024),
+    melody = Melody(
+        [
+            Note(60.0, 0.0, 1),
+            Note(67.0, 0.5, 1),
+            Note(64.0, 1.0, 1),
+            Note(69.0, 1.5, 1),
+        ]
     )
 
-    all_audio = []
-    for pitch, duration in [
-        (40, 0.5),
-        (42, 0.5),
-        (44, 0.5),
-        (45, 0.5),
-        (47, 0.5),
-        (49, 0.5),
-    ]:
-        spectrum = s.generate_spectrum(pitch)
-        all_audio.append(
-            np.real(s.generate_audio(spectrum, duration))
-        )
+    print(melody.total_duration())
 
-    sd.play(np.concat(all_audio), 16000)
+    synthesizer = Synthesizer(sample_rate=16000.0)
+
+    signal = synthesizer.generate(melody)
+
+    sd.play(signal, samplerate=16000)
     sd.wait()
-
 
 if __name__ == "__main__":
     main()
