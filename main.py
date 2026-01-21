@@ -16,14 +16,13 @@ def main():
         ]
     )
 
-    print(melody.total_duration())
-
     synthesizer = Synthesizer(sample_rate=16000.0)
 
     signal = synthesizer.generate(melody)
 
     sd.play(signal, samplerate=16000)
     sd.wait()
+
 
 if __name__ == "__main__":
     main()
