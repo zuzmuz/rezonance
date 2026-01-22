@@ -7,16 +7,18 @@ from src.music import Melody
 def freq_from_pitch(
     pitch: np.floating,
     *,
-    A4: np.float32 = np.float32(440),
+    A4: np.float32,
 ) -> np.floating:
     return np.pow(2, (pitch - 69) / 12) * A4
+
 
 def pitch_from_freq(
     frequency: np.floating,
     *,
-    A4: np.float32 = np.float32(440),
+    A4: np.float32,
 ) -> np.floating:
     return np.log2(frequency / A4) * 12 + 69
+
 
 class Synthesizer:
     def __init__(
@@ -32,15 +34,11 @@ class Synthesizer:
         self,
         pitch: np.floating,
         *,
-        out: npt.NDArray | None = None,
         A4: np.float32 = np.float32(440),
     ) -> npt.NDArray:
-        if not out:
-            out = np.zeros(self.buffer_size, dtype=np.complex64)
-        else:
-            out[:] = 0
 
-        frequency = freq_from_pitch(pitch)
+        out = np.zeros(self.buffer_size, dtype=np.complex64)
+        frequency = freq_from_pitch(pitch, A4=A4)
 
         index = frequency * self.buffer_size / self.sample_rate
         floor_index = np.int16(np.floor(index))
@@ -49,12 +47,32 @@ class Synthesizer:
         out[floor_index] = 1.0 * (ceil_index - index)
         out[ceil_index] = 1.0 * (index - floor_index)
 
-        out[self.buffer_size - floor_index - 1] = np.conjugate(out[floor_index])
-        out[self.buffer_size - ceil_index - 1] = -np.conjugate(out[ceil_index])
+        out[self.buffer_size - floor_index - 1] = np.conjugate(
+            out[floor_index]
+        )
+        out[self.buffer_size - ceil_index - 1] = -np.conjugate(
+            out[ceil_index]
+        )
 
         return out
 
-    def gerenate_waveform_from_spectrum(self, spectrum: npt.NDArray) -> npt.NDArray:
+    def gerenate_waveform_from_spectrum(
+        self, spectrum: npt.NDArray
+    ) -> npt.NDArray:
         complex_audio = np.fft.ifft(spectrum)
         return complex_audio
 
+    def generate_waveform_from_pitch(
+        self,
+        pitch: np.floating,
+        *,
+        A4: np.float32 = np.float32(440),
+    ) -> npt.NDArray:
+        frequency = freq_from_pitch(pitch, A4=A4)
+        linspace = np.linspace(
+            0, self.buffer_size / self.sample_rate, self.buffer_size
+        )
+        return linspace
+
+    def generate_spectrum_from_audio():
+        pass
