@@ -50,13 +50,13 @@ class Synthesizer:
         out[self.buffer_size - floor_index - 1] = np.conjugate(
             out[floor_index]
         )
-        out[self.buffer_size - ceil_index - 1] = -np.conjugate(
+        out[self.buffer_size - ceil_index - 1] = np.conjugate(
             out[ceil_index]
         )
 
         return out
 
-    def gerenate_waveform_from_spectrum(
+    def generate_waveform_from_spectrum(
         self, spectrum: npt.NDArray
     ) -> npt.NDArray:
         complex_audio = np.fft.ifft(spectrum)
@@ -72,7 +72,11 @@ class Synthesizer:
         linspace = np.linspace(
             0, self.buffer_size / self.sample_rate, self.buffer_size
         )
-        return linspace
+        return np.sin(linspace * 2 * np.pi * frequency)
 
-    def generate_spectrum_from_audio():
-        pass
+    def generate_spectrum_from_waveform(
+        self,
+        waveform: npt.NDArray
+    ) -> npt.NDArray:
+        return np.fft.fft(waveform)
+
