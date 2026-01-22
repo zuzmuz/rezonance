@@ -9,55 +9,35 @@ class Synthesizer:
         self,
         *,
         sample_rate: np.floating,
+        buffer_size: np.int16,
     ):
         self.sample_rate = sample_rate
+        self.buffer_size = buffer_size
 
-    def generate(
+    def generate_spectrum(
         self,
-        melody: Melody,
+        pitch: np.floating,
         *,
-        A4: np.floating = np.float32(440),
-    ) -> npt.DTypeLike:
-        total_duration = melody.total_duration()
-        indices = np.arange(
-            int(np.round(total_duration * self.sample_rate))
-        )[:, None]
-        linspace = indices / self.sample_rate
-        signal = np.zeros_like(linspace)
-        frequencies = (
-            np.power(2, (melody.notes[0, None] - 69) / 12) * A4
-        )
+        out: npt.NDArray | None = None,
+        A4: np.float32 = np.float32(440),
+    ) -> npt.NDArray:
+        if not out:
+            out = np.zeros(self.buffer_size, dtype=np.complex64)
+        else:
+            out[:] = 0
 
-        note_indices_start = melody.notes[1, None] * self.sample_rate
-        note_indices_end = (
-            melody.notes[1, None] + melody.notes[2, None]
-        ) * self.sample_rate
+        frequency = np.pow(2, (pitch - 69) / 12) * A4
 
-        masks = (indices >= note_indices_start) & (
-            indices <= note_indices_end
-        )
+        index = frequency * self.buffer_size / self.sample_rate
+        floor_index = np.int16(np.floor(index))
+        ceil_index = np.int16(np.ceil(index))
 
-        all_notes = (
-            0.5
-            * (
-                0.7 * np.sin(linspace @ (frequencies * 2 * np.pi))
-                + 0.2 * np.sin(linspace @ (2 * frequencies * 2 * np.pi))
-                + 0.3 * np.sin(linspace @ (3 * frequencies * 2 * np.pi))
-                + 0.1 * np.sin(linspace @ (4 * frequencies * 2 * np.pi))
-                + 0.5 * np.sin(linspace @ (5 * frequencies * 2 * np.pi))
-                + 0.1 * np.sin(linspace @ (6 * frequencies * 2 * np.pi))
-                + 0.05 * np.sin(linspace @ (7 * frequencies * 2 * np.pi))
-                + 0.03 * np.sin(linspace @ (8 * frequencies * 2 * np.pi))
-                + 0.01 * np.sin(linspace @ (9 * frequencies * 2 * np.pi))
-            )
-            * masks
-        )
+        out[floor_index] = 1.0 * (ceil_index - index)
+        out[ceil_index] = 1.0 * (index - floor_index)
 
-        return all_notes.sum(axis=1)
+        return out
 
-    def synthesize_note(
-        self,
-        frequency: np.floating,
-    ) -> npt.DTypeLike:
-        signal = np.sin(2 * np.pi * frequency * t)
-        return signal
+    def gerenate_waveform(self, spectrum: npt.NDArray) -> npt.NDArray:
+        complex_audio = np.fft.ifft(spectrum)
+        return np.abs(complex_audio)
+
