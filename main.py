@@ -16,12 +16,22 @@ def main():
         ]
     )
 
-    synthesizer = Synthesizer(sample_rate=16000.0)
+    synth = Synthesizer(
+        sample_rate=np.float32(16000),
+        buffer_size=np.int16(1024)
+    )
+    spectrum = synth.generate_spectrum_from_pitch(np.float32(72))
+    # plt.plot(np.abs(spectrum))
+    audio = synth.gerenate_waveform(spectrum)
 
-    signal = synthesizer.generate(melody)
+    plt.plot(np.real(audio))
+    plt.plot(np.imag(audio))
+    plt.plot(np.abs(audio))
+    plt.show()
 
-    sd.play(signal, samplerate=16000)
-    sd.wait()
+    #
+    # sd.play(signal, samplerate=16000)
+    # sd.wait()
 
 
 if __name__ == "__main__":
