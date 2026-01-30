@@ -28,14 +28,14 @@ def main():
     # plt.plot(np.abs(audio))
     # plt.show()
 
-    audio = synth.generate_waveform_from_pitch(np.float32(69))
-    spectrum = synth.generate_spectrum_from_waveform(audio)
-    regen_audio = synth.generate_waveform_from_spectrum(spectrum)
+    # audio = synth.generate_waveform_from_pitch(np.float32(69))
+    # spectrum = synth.generate_spectrum_from_waveform(audio)
+    # regen_audio = synth.generate_waveform_from_spectrum(spectrum)
     spectrum = synth.generate_spectrum_from_pitch(np.float32(69))
     gen_audio = synth.generate_waveform_from_spectrum(spectrum)
 
 
-    plt.plot(np.abs(gen_audio))
+    plt.plot(gen_audio)
     # plt.plot(np.imag(gen_audio))
     plt.show()
     #

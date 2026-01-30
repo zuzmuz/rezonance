@@ -44,23 +44,23 @@ class Synthesizer:
         floor_index = np.int16(np.floor(index))
         ceil_index = np.int16(np.ceil(index))
 
-        out[floor_index] = 1.0 * (ceil_index - index)
+        out[floor_index] = 1.0 * (ceil_index - index) * np.exp(1j * np.pi * 0.8)
         out[ceil_index] = 1.0 * (index - floor_index)
 
-        out[self.buffer_size - floor_index - 1] = np.conjugate(
-            out[floor_index]
-        )
-        out[self.buffer_size - ceil_index - 1] = np.conjugate(
-            out[ceil_index]
-        )
+        # out[self.buffer_size - floor_index - 1] = np.conjugate(
+        #     out[floor_index]
+        # )
+        # out[self.buffer_size - ceil_index - 1] = np.conjugate(
+        #     out[ceil_index]
+        # )
 
         return out
 
     def generate_waveform_from_spectrum(
         self, spectrum: npt.NDArray
     ) -> npt.NDArray:
-        complex_audio = np.fft.ifft(spectrum)
-        return complex_audio
+        audio = np.fft.irfft(spectrum)
+        return audio
 
     def generate_waveform_from_pitch(
         self,
