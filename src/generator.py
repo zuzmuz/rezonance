@@ -24,18 +24,20 @@ class Synthesizer:
         *,
         sample_rate: np.floating,
         buffer_size: np.int16,
+        A4: np.float32
     ):
         self.sample_rate = sample_rate
         self.buffer_size = buffer_size
+        self.A4 = A4
 
     def generate_spectrum_from_pitch(
         self,
         pitch: np.floating,
-        *,
-        A4: np.float32 = np.float32(440),
     ) -> npt.NDArray:
-        out = np.zeros(self.buffer_size, dtype=np.complex64)
-        frequency = freq_from_pitch(pitch, A4=A4)
+        # we only need half the spectrum for real signals
+        out = np.zeros(self.buffer_size//2 + 1, dtype=np.complex64)
+
+        frequency = freq_from_pitch(pitch, A4=self.A4)
 
         index = frequency * self.buffer_size / self.sample_rate
         floor_index = np.int16(np.floor(index))
@@ -60,10 +62,8 @@ class Synthesizer:
     def generate_waveform_from_pitch(
         self,
         pitch: np.floating,
-        *,
-        A4: np.float32 = np.float32(440),
     ) -> npt.NDArray:
-        frequency = freq_from_pitch(pitch, A4=A4)
+        frequency = freq_from_pitch(pitch, A4=self.A4)
         linspace = np.linspace(
             0, self.buffer_size / self.sample_rate, self.buffer_size
         )
