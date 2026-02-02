@@ -1,13 +1,8 @@
 from argparse import ArgumentParser
 import numpy as np
-import torch
 import matplotlib.pyplot as plt
-import sounddevice as sd
-from torch.utils.data import Dataset, DataLoader
 
-from src.generator import Synthesizer
-from src.music import Melody, Note
-from src.training import WaveformDataset, MonophonicModel, Trainer
+from src.training import SineWaveformDataset, MonophonicModel, Trainer
 
 
 class Modes:
@@ -17,13 +12,12 @@ class Modes:
         buffer_size = np.int16(1024)
         A4 = np.float32(440)
 
-        dataset = WaveformDataset(
+        dataset = SineWaveformDataset(
             1000,
             4,
             sample_rate=sample_rate,
             buffer_size=buffer_size,
             A4=A4,
-            seed=42,
         )
 
         if verbose:

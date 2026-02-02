@@ -7,65 +7,77 @@ import numpy as np
 import numpy.typing as npt
 import matplotlib.pyplot as plt
 
-from src.generator import Synthesizer, pitch_from_freq
+from src.generator import (
+    SpectrumSynth,
+    pitch_from_freq,
+    gen_wav_from_spectrum,
+)
 
 
-class WaveformDataset(Dataset):
+class SineWaveformDataset(Dataset):
     def __init__(
         self,
-        pitches: npt.ArrayLike,
-        phase_distribution: npt.ArrayLike,
+        nb_pitches: int,
+        nb_phases: int,
         /,
         sample_rate: np.floating,
         buffer_size: np.int16,
         A4: np.float32,
         seed: int | None = None,
     ):
-        self.length = length
-        self.repeats = repeats
-        if seed:
-            np.random.seed(seed)
+        self.nb_pitches = nb_pitches
+        self.nb_phases = nb_phases
 
-        self.synth = Synthesizer(
+        self.synth = SpectrumSynth(
             sample_rate=sample_rate, buffer_size=buffer_size, A4=A4
         )
 
         max_pitch = pitch_from_freq(0.25 * sample_rate, A4=A4)
 
-        self.pitches = np.linspace(0, max_pitch, num=length, dtype=np.float32)
-        self.phases = np.linspace()
+        # TODO: consider performance benefits of torch tensors here
+        self.pitches = np.linspace(
+            0, max_pitch, num=nb_pitches, dtype=np.float32
+        )
+        self.start_phases = np.linspace(
+            -1, 1, num=nb_pitches, dtype=np.float32
+        )
+        self.end_phases = np.linspace(
+            -1, 1, num=nb_pitches, dtype=np.float32
+        )
 
     def __len__(self):
-        return self.length * self.phases
+        return self.nb_pitches * self.nb_phases**2
 
     def __getitem__(self, idx):
-        pitch = self.pitches[idx]
-        spectrum = self.synth.generate_spectrum_from_pitch(pitch)
-        waveform = self.synth.generate_waveform_from_spectrum(
-            spectrum
-        )
+        pitch_idx = idx // (self.nb_phases**2)
+        pitch = self.pitches[pitch_idx]
+        phase_start_idx = (idx // self.nb_phases) % self.nb_phases
+        phase_end_idx = idx % self.nb_phases
+
+        spectrum = self.synth.gen_sin(pitch, phase_start_idx, phase_end_idx)
+        waveform = gen_wav_from_spectrum(spectrum)
         waveform = torch.tensor(waveform, dtype=torch.float32)
 
         return waveform, pitch
 
 
 class MonophonicModel(nn.Module):
-    def __init__(self, buffer_size: int):
+    def __init__(self, buffer_size: np.int16):
         super(MonophonicModel, self).__init__()
 
         self.model = nn.Sequential(
             nn.Linear(buffer_size, 512),
             nn.Tanh(),
-            nn.Linear(512, 512),
-            nn.Tanh(),
+            # nn.Linear(512, 512),
+            # nn.Tanh(),
             nn.Linear(512, 256),
             nn.Tanh(),
-            nn.Linear(256, 256),
-            nn.Tanh(),
+            # nn.Linear(256, 256),
+            # nn.Tanh(),
             nn.Linear(256, 128),
             nn.Tanh(),
-            nn.Linear(128, 128),
-            nn.Tanh(),
+            # nn.Linear(128, 128),
+            # nn.Tanh(),
             nn.Linear(128, 1),
         )
 

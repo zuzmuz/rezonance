@@ -37,7 +37,7 @@ def pitch_from_freq(
     return np.log2(frequency / A4) * 12 + 69
 
 
-def generate_waveform_from_spectrum(
+def gen_wav_from_spectrum(
     spectrum: npt.NDArray,
 ) -> npt.NDArray:
     """
