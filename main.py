@@ -22,20 +22,20 @@ class Modes:
 
         if verbose:
             plt.figure()
-            for idx in range(6):
+            for idx in range(16*600, 16*600 + 6):
                 waveform, pitch = dataset[idx]
-                plt.subplot(3, 2, idx+1)
+                plt.subplot(3, 2, idx+1 - 16*600)
                 plt.plot(waveform.numpy(), label=f'{pitch:.2f}')
                 plt.legend()
 
         trainer = Trainer(MonophonicModel(buffer_size))
 
-        history = trainer.train(1, dataset)
-        plt.figure()
-        plt.title('history')
-        plt.plot(history)
+        # history = trainer.train(1, dataset)
+        # plt.figure()
+        # plt.title('history')
+        # plt.plot(history)
         plt.show()
-        trainer.save_model("monophonic_model.pth")
+        # trainer.save_model("monophonic_model.pth")
 
 
 def main():

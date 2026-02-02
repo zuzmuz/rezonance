@@ -38,11 +38,8 @@ class SineWaveformDataset(Dataset):
         self.pitches = np.linspace(
             0, max_pitch, num=nb_pitches, dtype=np.float32
         )
-        self.start_phases = np.linspace(
-            -1, 1, num=nb_pitches, dtype=np.float32
-        )
-        self.end_phases = np.linspace(
-            -1, 1, num=nb_pitches, dtype=np.float32
+        self.phases = np.linspace(
+            -1, 1, num=nb_phases, dtype=np.float32
         )
 
     def __len__(self):
@@ -53,8 +50,14 @@ class SineWaveformDataset(Dataset):
         pitch = self.pitches[pitch_idx]
         phase_start_idx = (idx // self.nb_phases) % self.nb_phases
         phase_end_idx = idx % self.nb_phases
+        phase_start = self.phases[phase_start_idx]
+        phase_end = (
+            self.synth.buffer_size
+            * self.phases[phase_end_idx]
+            / self.nb_phases
+        )
 
-        spectrum = self.synth.gen_sin(pitch, phase_start_idx, phase_end_idx)
+        spectrum = self.synth.gen_sin(pitch, phase_start, phase_end)
         waveform = gen_wav_from_spectrum(spectrum)
         waveform = torch.tensor(waveform, dtype=torch.float32)
 
