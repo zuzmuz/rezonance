@@ -1,7 +1,5 @@
 import numpy as np
 import numpy.typing as npt
-import scipy as sp
-from src.music import Melody
 
 
 def freq_from_pitch(
