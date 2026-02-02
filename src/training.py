@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib.pyplot as plt
 
-from generator import Synthesizer
+from src.generator import Synthesizer
 
 
 class WaveformDataset(Dataset):
@@ -39,7 +39,7 @@ class WaveformDataset(Dataset):
 
 
 class MonophonicModel(nn.Module):
-    def __iniy__(self, buffer_size: int):
+    def __init__(self, buffer_size: int):
         super(MonophonicModel, self).__init__()
 
         self.model = nn.Sequential(
