@@ -36,7 +36,6 @@ class Synthesizer:
         *,
         A4: np.float32 = np.float32(440),
     ) -> npt.NDArray:
-
         out = np.zeros(self.buffer_size, dtype=np.complex64)
         frequency = freq_from_pitch(pitch, A4=A4)
 
@@ -44,16 +43,14 @@ class Synthesizer:
         floor_index = np.int16(np.floor(index))
         ceil_index = np.int16(np.ceil(index))
 
-        out[floor_index] = 1.0 * (ceil_index - index) * np.exp(1j * np.pi * 0.8)
-        out[ceil_index] = 1.0 * (index - floor_index)
-
-        # out[self.buffer_size - floor_index - 1] = np.conjugate(
-        #     out[floor_index]
-        # )
-        # out[self.buffer_size - ceil_index - 1] = np.conjugate(
-        #     out[ceil_index]
-        # )
-
+        out[floor_index] = (
+            (ceil_index - index)
+            * np.exp(2j * np.pi * np.random.random(1)[0])
+        )
+        out[ceil_index] = (
+            (index - floor_index)
+            * np.exp(2j * np.pi * np.random.random(1)[0])
+        )
         return out
 
     def generate_waveform_from_spectrum(
@@ -75,8 +72,6 @@ class Synthesizer:
         return np.sin(linspace * 2 * np.pi * frequency)
 
     def generate_spectrum_from_waveform(
-        self,
-        waveform: npt.NDArray
+        self, waveform: npt.NDArray
     ) -> npt.NDArray:
         return np.fft.fft(waveform)
-
