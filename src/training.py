@@ -4,6 +4,7 @@ import torch.optim as optim
 from torch.utils.data import Dataset, DataLoader
 import matplotlib.pyplot as plt
 import numpy as np
+import numpy.typing as npt
 import matplotlib.pyplot as plt
 
 from src.generator import Synthesizer, pitch_from_freq
@@ -12,8 +13,8 @@ from src.generator import Synthesizer, pitch_from_freq
 class WaveformDataset(Dataset):
     def __init__(
         self,
-        length: int,
-        repeats: int,
+        pitches: npt.ArrayLike,
+        phase_distribution: npt.ArrayLike,
         /,
         sample_rate: np.floating,
         buffer_size: np.int16,
@@ -31,12 +32,11 @@ class WaveformDataset(Dataset):
 
         max_pitch = pitch_from_freq(0.25 * sample_rate, A4=A4)
 
-        self.pitches = np.repeat(np.linspace(
-            0, max_pitch, num=length, dtype=np.float32
-        ), repeats)
+        self.pitches = np.linspace(0, max_pitch, num=length, dtype=np.float32)
+        self.phases = np.linspace()
 
     def __len__(self):
-        return self.length
+        return self.length * self.phases
 
     def __getitem__(self, idx):
         pitch = self.pitches[idx]
@@ -103,7 +103,6 @@ class Trainer:
                     f"Epoch {epoch + 1}: Mean Squared Error = {history[-1]:.5f}"
                 )
         return history
-    
+
     def save_model(self, path: str):
         torch.save(self.model.state_dict(), path)
-
