@@ -7,6 +7,15 @@ def freq_from_pitch(
     *,
     A4: np.float32,
 ) -> np.floating:
+    """
+    Generate a frequency in Hz from a MIDI pitch number.
+    0 is C-1 (8.1758 Hz), 69 is A4
+    Parameters:
+        - pitch: The input pitch number as a floating point value
+        - A4: The reference frequency for A4 in Hz
+    Returns:
+        The frequency in Hz
+    """
     return np.pow(2, (pitch - 69) / 12) * A4
 
 
@@ -15,19 +24,29 @@ def pitch_from_freq(
     *,
     A4: np.float32,
 ) -> np.floating:
+    """
+    Generate a MIDI pitch number from a frequency in Hz.
+    0 is C-1 (8.1758 Hz), 69 is A4 (440 Hz)
+    Parameters:
+        - frequency: The input frequency in Hz
+        - A4: The reference frequency for A4 in Hz
+    Returns:
+        The pitch number as a floating point value,
+        a difference of 1 corresponds to 100 cents
+    """
     return np.log2(frequency / A4) * 12 + 69
 
 
 def generate_waveform_from_spectrum(
     spectrum: npt.NDArray,
 ) -> npt.NDArray:
-    '''
+    """
     Generate a time-domain waveform from a frequency-domain spectrum.
     Parameters:
         - spectrum: The input frequency-domain spectrum, of size `N`
     Returns:
         The audio waveform in the time domain, of size `(N-1)*2`
-    '''
+    """
     audio = np.fft.irfft(spectrum)
     return audio
 
