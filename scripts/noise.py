@@ -5,7 +5,6 @@ from src.waveform import Noise, NoiseSynth
 
 
 def run(*args, **kwargs):
-    sample_rate = np.float32(16_000)
     buffer_size = 1024
 
     plt.figure()
@@ -16,6 +15,7 @@ def run(*args, **kwargs):
         ("brown", "brown", Noise.brown(1.0)),
         ("blue", "blue", Noise.blue(1.0)),
         ("violet", "violet", Noise.violet(1.0)),
+        ("brown + violet", "green", Noise.brown(1.4) + Noise.violet(0.3))
     ]
 
     noises_len = len(noises)

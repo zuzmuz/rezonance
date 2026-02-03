@@ -31,9 +31,7 @@ class NoiseSynth:
         )
 
     def __add__(self, other: NoiseSynth) -> NoiseSynth:
-        return CompositeNoiseSynth(
-            synths=[self, other]
-        )
+        return CompositeNoiseSynth(synths=[self, other])
 
 
 class CompositeNoiseSynth(NoiseSynth):
@@ -41,7 +39,7 @@ class CompositeNoiseSynth(NoiseSynth):
         self.synths = synths
 
     def __call__(self, buffer_size: int) -> Tensor:
-        return torch.tensor(
+        return torch.stack(
             [synth(buffer_size) for synth in self.synths]
         ).sum(dim=0)
 
@@ -56,7 +54,7 @@ class Noise:
         return NoiseSynth(
             power=power,
             filter=lambda freq: 1
-            / torch.where(freq == 0, float("inf"), freq),
+            / torch.where(freq == 0, 1, freq),
         )
 
     @classmethod
@@ -64,7 +62,7 @@ class Noise:
         return NoiseSynth(
             power=power,
             filter=lambda freq: 1
-            / torch.where(freq == 0, float("inf"), torch.sqrt(freq)),
+            / torch.where(freq == 0, 1, torch.sqrt(freq)),
         )
 
     class white(NoiseSynth):
