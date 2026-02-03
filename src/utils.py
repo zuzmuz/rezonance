@@ -3,10 +3,10 @@ import numpy.typing as npt
 
 
 def freq_from_pitch(
-    pitch: np.floating,
+    pitch: npt.NDArray,
     *,
-    A4: np.float32,
-) -> np.floating:
+    A4: np.floating,
+) -> npt.NDArray:
     """
     Generate a frequency in Hz from a MIDI pitch number.
     0 is C-1 (8.1758 Hz), 69 is A4
@@ -20,10 +20,10 @@ def freq_from_pitch(
 
 
 def pitch_from_freq(
-    frequency: np.floating,
+    frequency: npt.NDArray,
     *,
-    A4: np.float32,
-) -> np.floating:
+    A4: np.floating,
+) -> npt.NDArray:
     """
     Generate a MIDI pitch number from a frequency in Hz.
     0 is C-1 (8.1758 Hz), 69 is A4 (440 Hz)
@@ -61,6 +61,8 @@ def gen_sin_from_pitch(
         - pitch: The input pitch number as a floating point value
         - phase: The phase offset, value between `[-1, 1]`
     Rerturns:
-        The audio
+        Array containing the sine wave samples
     """
-    pass
+    return np.sin(np.
+
+

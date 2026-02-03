@@ -16,26 +16,47 @@ class WaveformSynth:
         self.buffer_size = buffer_size
         self.A4 = A4
 
-    def gen(
+    def gen_single(
         self,
-        pitches: npt.ArrayLike,
-        phases: npt.ArrayLike,
+        pitch: np.floating,
+        phase: np.floating,
     ) -> npt.NDArray:
-        if np.ndim(pitches) != np.ndim(phases):
-            raise ValueError("Pitch and phase must have the same size")
+        frequency = freq_from_pitch(pitch, A4=self.A4) # type: ignore
+        linspace = np.linspace(
+            0,
+            self.buffer_size / self.sample_rate,
+            num=self.buffer_size,
+        )
+        return np.sin((frequency * linspace + phase) * np.pi)
 
-        if np.ndim(pitches) == 0:
-            pitches = [pitches] # type: ignore
-            phases = [phases] # type: ignore
-
-        out = np.zeros(self.buffer_size)
-
-        for pitch, phase in zip(pitches, phases): # type: ignore
-            frequency = freq_from_pitch(pitch, A4=self.A4)
-            linspace = np.linspace(
-                0,
-                self.buffer_size / self.sample_rate,
-                num=self.buffer_size,
+    def gen_multiple(
+        self,
+        params: npt.NDArray,
+    ) -> npt.NDArray:
+        """
+        Generating waveform as sum of sinewaves from a distriution of parameters.
+        Parameters:
+            - params: matrix representing sinewaves params, size `3 * n`
+              n being the number of sines.
+              - The first row is the pitch.
+              - The second row is the phase.
+              - The third row is the power.
+        Returns:
+            The sum of sinewaves with all
+        """
+        linspace = np.linspace(
+            0,
+            self.buffer_size / self.sample_rate,
+            num=self.buffer_size,
+        )
+        return (
+            params[2]  # power
+            * np.sin(
+                (
+                    linspace
+                    * freq_from_pitch(params[0], A4=self.A4)  # frequency
+                    + params[1]  # phase
+                )
+                * np.pi
             )
-            out += np.sin((frequency * linspace + phase) * np.pi)
-        return out
+        ).sum()
