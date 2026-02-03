@@ -12,8 +12,8 @@ def run(*args, verbose: bool = False, **kwargs):
     A4 = 440.0
 
     dataset = SineWaveformDataset(
-        1000,
-        100,
+        500,
+        50,
         sample_rate=sample_rate,
         buffer_size=buffer_size,
         A4=A4,

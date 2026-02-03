@@ -16,6 +16,13 @@ class NoiseSynth:
         self.filter = filter
 
     def __call__(self, buffer_size: int) -> Tensor:
+        """
+        Generate a noise buffer of given size.
+        Parameters:
+            buffer_size (int): the size of the buffer to generate
+        Returns:
+            A noise buffer of size `buffer_size`, the noise profile is determined by the filter
+        """
         noise = self.generate_noise(buffer_size)
         noise_fft = torch.fft.rfft(noise)
         filtered_freq = self.filter(torch.fft.rfftfreq(buffer_size))
@@ -102,15 +109,15 @@ class WaveformSynth:
         self.buffer_size = buffer_size
         self.A4 = A4
 
-    def gen_single(
+    def gen_mono(
         self,
         params: Tensor,
     ) -> Tensor:
         """
-        Generate sinusoidal waveform,
+        Generate monophonic sinusoidal waveform,
         Parameters:
             params (tensor): representing sinewave params, size `2 * n`
-                n being the number of signals required
+                n being the number of signals required.
                 - index 0 is pitch
                 - index 1 is phase
         Returns:
@@ -120,29 +127,29 @@ class WaveformSynth:
             0,
             self.buffer_size / self.sample_rate,
             self.buffer_size,
-        )[None, :]
+        ).unsqueeze(0)
 
         return torch.sin(
             (
                 freq_from_pitch(
-                    params[0, None].T, # pitch
-                    A4=self.A4
-                ) # frequency
+                    params[0, None].T,  # pitch
+                    A4=self.A4,
+                )  # frequency
                 @ linspace
                 + params[1, None].T  # phase
             )
             * np.pi
         )
 
-    def gen_multiple(
+    def gen_poly(
         self,
         params: Tensor,
     ) -> Tensor:
         """
-        Generating waveform as sum of sinewaves from a distriution of parameters.
+        Generating polyphonic waveform as sum of sinewaves from a distriution of parameters.
         Parameters:
-            params (tensor): representing sinewaves params, size `3 * n`
-                n being the number of sines.
+            params (tensor): representing sinewaves params, size `3 * p * n`
+                n being the number of signals required.
                 - The first row is the pitch.
                 - The second row is the phase.
                 - The third row is the power.
