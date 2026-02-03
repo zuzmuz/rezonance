@@ -4,17 +4,14 @@ import torch.optim as optim
 from torch.utils.data import Dataset, DataLoader
 import numpy as np
 import numpy.typing as npt
-import matplotlib.pyplot as plt
 
 from src.utils import (
     pitch_from_freq,
-    freq_from_pitch,
-    gen_wav_from_spectrum,
 )
 from src.waveform import WaveformSynth, NoiseSynth
 
 
-class SineWaveformDataset(Dataset):
+class NoisySineWaveformDataset(Dataset):
     def __init__(
         self,
         nb_pitches: int,
@@ -37,7 +34,7 @@ class SineWaveformDataset(Dataset):
             sample_rate=sample_rate, buffer_size=buffer_size
         )
         # Saving the noise function and not the noise signal
-        # Saving the noise signal might 
+        # Saving the noise signal might
         # self.noises = [
         #     noise(noise_synth.gaussian)
         #     for noise_func, noise_power in noises
@@ -67,16 +64,80 @@ class SineWaveformDataset(Dataset):
         return self.nb_pitches * self.nb_phases * len(self.noises)
 
     def __getitem__(self, idx):
-        pitch = self.pitches[idx // (self.nb_phases * len(self.noises))]
-        phase = self.phases[(idx // len(self.noises)) % self.nb_phases]
-
+        pitch = self.pitches[
+            idx // (self.nb_phases * len(self.noises))
+        ]
+        phase = self.phases[
+            (idx // len(self.noises)) % self.nb_phases
+        ]
 
         waveform = self.synth.gen_single(pitch, phase)  # type: ignore
 
-        if self.noises: # in case of non empty noise list
-            noise_func, noise_power = self.noises[idx % len(self.noises)]
-            noise = noise_func(self.noise_synth) * noise_power
-            waveform += noise
+        # if self.noises:  # in case of non empty noise list
+        # noise_func, noise_power = self.noises[
+        #     idx % len(self.noises)
+        # ]
+        # noise = (
+        #     noise_func(self.noise_synth.gaussian) * noise_power
+        # )
+        # waveform += noise
+
+        waveform /= waveform.std()
+        waveform = torch.tensor(waveform, dtype=torch.float32)
+
+        return waveform, pitch
+
+
+class SineWaveformDataset(Dataset):
+    def __init__(
+        self,
+        nb_pitches: int,
+        nb_phases: int,
+        /,
+        noises: list,
+        *,
+        sample_rate: np.floating,
+        buffer_size: np.int16,
+        A4: np.float32,
+        seed: int | None = None,
+    ):
+        if seed:
+            np.random.seed(seed)
+
+        self.nb_pitches = nb_pitches
+        self.nb_phases = nb_phases
+
+        self.noise_synth = NoiseSynth(
+            sample_rate=sample_rate, buffer_size=buffer_size
+        )
+
+        self.synth = WaveformSynth(
+            sample_rate=sample_rate,
+            buffer_size=buffer_size,
+            A4=A4,
+        )
+
+        # max pitch is necessary to prevent aliasing
+        # adding sines with frequencies close and higher than Shannon frequency
+        # will add lower frequencies which are undesired
+        max_pitch = pitch_from_freq(0.25 * sample_rate, A4=A4)  # type: ignore
+
+        # TODO: consider performance benefits of torch tensors here
+        self.pitches = np.linspace(
+            0, max_pitch, num=nb_pitches, dtype=np.float32
+        )
+        self.phases = np.linspace(
+            -1, 1, num=nb_phases, dtype=np.float32
+        )
+
+    def __len__(self):
+        return self.nb_pitches * self.nb_phases
+
+    def __getitem__(self, idx):
+        pitch = self.pitches[idx // self.nb_phases]
+        phase = self.phases[idx % self.nb_phases]
+
+        waveform = self.synth.gen_single(pitch, phase)  # type: ignore
 
         waveform /= waveform.std()
         waveform = torch.tensor(waveform, dtype=torch.float32)
@@ -123,7 +184,6 @@ class Trainer:
                 device=torch.get_default_device()
             ),
         )
-        history = []
         for epoch in range(nb_epoch):
             self.model.train()
             epoch_loss = 0
@@ -135,16 +195,14 @@ class Trainer:
                 self.optimizer.step()
 
                 epoch_loss += loss.item()
-                # epoch_accuracy += accuracy_score(
-                #     batch_y.detach().numpy(),
-                #     hat_y.detach().numpy().argmax(axis=1)
-                # )
-            history.append(epoch_loss / len(data_loader))
-            if (epoch + 1) % 10 == 0:
+
+            if (epoch + 1) % 2 == 0:
+                num_batches = len(data_loader)
                 print(
-                    f"Epoch {epoch + 1}: Mean Squared Error = {history[-1]:.5f}"
+                    f"Epoch {epoch + 1}: "
+                    f"Mean Squared Error = {epoch_loss / num_batches:.5f}, "
                 )
-        return history
+        return []
 
     def save_model(self, path: str):
         torch.save(self.model.state_dict(), path)

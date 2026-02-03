@@ -16,29 +16,29 @@ def run(*args, verbose: bool = False, **kwargs):
         100,
         [
             # TODO: consider smart noise combinations
-            (Noise.white, 0.01),
-            (Noise.white, 0.02),
-            (Noise.white, 0.03),
-            (Noise.white, 0.05),
-            (Noise.white, 0.1),
-            (Noise.white, 0.2),
-            (Noise.pink, 0.05),
-            (Noise.pink, 0.1),
-            (Noise.pink, 0.2),
-            (Noise.brown, 0.05),
-            (Noise.brown, 0.1),
-            (Noise.brown, 0.2),
-            (Noise.brown, 0.3),
-            (Noise.brown, 0.4),
-            (Noise.blue, 0.05),
-            (Noise.blue, 0.1),
-            (Noise.blue, 0.2),
-            (Noise.blue, 0.3),
-            (Noise.blue, 0.4),
-            (Noise.violet, 0.05),
-            (Noise.violet, 0.1),
-            (Noise.violet, 0.2),
-            (Noise.violet, 0.5),
+            # (Noise.white, 1.01),
+            # (Noise.white, 0.02),
+            # (Noise.white, 0.03),
+            # (Noise.white, 0.05),
+            # (Noise.white, 0.1),
+            # (Noise.white, 0.2),
+            # (Noise.pink, 0.05),
+            # (Noise.pink, 0.1),
+            # (Noise.pink, 0.2),
+            # (Noise.brown, 0.05),
+            # (Noise.brown, 0.1),
+            # (Noise.brown, 0.2),
+            # (Noise.brown, 0.3),
+            # (Noise.brown, 0.4),
+            # (Noise.blue, 0.05),
+            # (Noise.blue, 0.1),
+            # (Noise.blue, 0.2),
+            # (Noise.blue, 0.3),
+            # (Noise.blue, 0.4),
+            # (Noise.violet, 0.05),
+            # (Noise.violet, 0.1),
+            # (Noise.violet, 0.2),
+            # (Noise.violet, 0.5),
         ],
         sample_rate=sample_rate,
         buffer_size=buffer_size,
@@ -47,7 +47,7 @@ def run(*args, verbose: bool = False, **kwargs):
 
     trainer = Trainer(MonophonicModel(buffer_size))
 
-    history = trainer.train(1000, dataset)
+    history = trainer.train(50, dataset)
     # plt.figure()
     # plt.title('history')
     # plt.plot(history)
