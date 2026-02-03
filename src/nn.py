@@ -118,9 +118,8 @@ class SineWaveformDataset(Dataset):
         # will add lower frequencies which are undesired
         max_pitch = pitch_from_freq(0.25 * sample_rate, A4=A4)
 
-        # TODO: consider performance benefits of torch tensors here
         self.pitches = torch.linspace(
-            0,
+            5,
             max_pitch,
             nb_pitches,
             dtype=torch.float32,
@@ -129,6 +128,11 @@ class SineWaveformDataset(Dataset):
             -1, 1, nb_phases, dtype=torch.float32
         )
 
+        self.data = torch.cartesian_prod(self.pitches, self.phases).T
+        print(f'Generated dataset of size: {self.data.shape}')
+
+        self.data = self.synth.gen_single(self.data[0], self.data[1])
+
     def __len__(self):
         return self.nb_pitches * self.nb_phases
 
@@ -136,7 +140,7 @@ class SineWaveformDataset(Dataset):
         pitch = self.pitches[idx // self.nb_phases]
         phase = self.phases[idx % self.nb_phases]
 
-        waveform = self.synth.gen_single(pitch, phase)  # type: ignore
+        waveform = self.synth.gen_single(pitch, phase)
 
         waveform /= waveform.std()
         waveform = torch.tensor(waveform, dtype=torch.float32)

@@ -1,4 +1,5 @@
 import numpy as np
+import torch
 import matplotlib.pyplot as plt
 
 from src.waveform import NoiseSynth, Noise, WaveformSynth
@@ -21,7 +22,7 @@ def run(*args, **kwargs):
         (Noise.violet(0.1) + Noise.brown(0.2), "violet 0.1 + brown 0.2"),
     ]
 
-    waveform = waveform_synth.gen_single(69, 0)
+    waveform = waveform_synth.gen_single(torch.tensor([[69], [0]]))[0]
 
     plt.figure()
     for idx, (synth, title) in enumerate(noises):

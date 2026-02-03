@@ -53,8 +53,7 @@ class Noise:
     def brown(cls, power: Number) -> NoiseSynth:
         return NoiseSynth(
             power=power,
-            filter=lambda freq: 1
-            / torch.where(freq == 0, 1, freq),
+            filter=lambda freq: 1 / torch.where(freq == 0, 1, freq),
         )
 
     @classmethod
@@ -91,6 +90,7 @@ class WaveformSynth:
         buffer_size (int): the buffer size of the generated waveform
         A4 (float): the reference frequency of the A4 note
     """
+
     def __init__(
         self,
         *,
@@ -104,24 +104,35 @@ class WaveformSynth:
 
     def gen_single(
         self,
-        pitch: Number,
-        phase: Number,
+        params: Tensor,
     ) -> Tensor:
         """
-        Generate sinusoidal waveform
+        Generate sinusoidal waveform,
         Parameters:
-            pitch (float): the pitch number (logarithmic scale) 69 represents A4
-            phase (float): the phase `[-1, 1]`
+            params (tensor): representing sinewave params, size `2 * n`
+                n being the number of signals required
+                - index 0 is pitch
+                - index 1 is phase
         Returns:
-            Sine wave, not normalized, consider scaling with std
+            Sine waves size `n * buffer_size`, not normalized, consider scaling with std
         """
-        frequency = freq_from_pitch(pitch, A4=self.A4)
         linspace = torch.linspace(
             0,
             self.buffer_size / self.sample_rate,
             self.buffer_size,
+        )[None, :]
+
+        return torch.sin(
+            (
+                freq_from_pitch(
+                    params[0, None].T, # pitch
+                    A4=self.A4
+                ) # frequency
+                @ linspace
+                + params[1, None].T  # phase
+            )
+            * np.pi
         )
-        return torch.sin((frequency * linspace + phase) * np.pi)
 
     def gen_multiple(
         self,
@@ -130,7 +141,7 @@ class WaveformSynth:
         """
         Generating waveform as sum of sinewaves from a distriution of parameters.
         Parameters:
-            params (matrix): representing sinewaves params, size `3 * n`
+            params (tensor): representing sinewaves params, size `3 * n`
                 n being the number of sines.
                 - The first row is the pitch.
                 - The second row is the phase.

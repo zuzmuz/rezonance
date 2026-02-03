@@ -1,12 +1,13 @@
+import numpy as np
 import torch
 from torch.types import Number, Tensor
 
 
 def freq_from_pitch(
-    pitch: Number | Tensor,
+    pitch: Tensor,
     *,
     A4: Number,
-) -> Number | Tensor:
+) -> Tensor:
     """
     Generate a frequency in Hz from a MIDI pitch number.
     0 is C-1 (8.1758 Hz), 69 is A4
@@ -16,11 +17,11 @@ def freq_from_pitch(
     Returns:
         The frequency in Hz, same shape as the input pitch
     """
-    return A4 * 2 ** ((pitch - 69) / 12)
+    return torch.pow(2, (pitch - 69) / 12) * A4
 
 
 def pitch_from_freq(
-    frequency: Tensor,
+    frequency: Number,
     *,
     A4: Number,
 ) -> Tensor:
@@ -34,7 +35,7 @@ def pitch_from_freq(
         The pitch number, same shape as the input frequency, where
         a difference of 1 corresponds to 100 cents
     """
-    return torch.log2(frequency / A4) * 12 + 69
+    return np.log2(frequency / A4) * 12 + 69
 
 
 def gen_wav_from_spectrum(
