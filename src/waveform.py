@@ -30,6 +30,25 @@ class NoiseSynth:
             std=1.0,
         )
 
+    def __add__(self, other: NoiseSynth) -> NoiseSynth:
+        return CompositeNoiseSynth(
+            synths=[self, other]
+        )
+
+
+class CompositeNoiseSynth(NoiseSynth):
+    def __init__(self, synths: list[NoiseSynth]):
+        self.synths = synths
+
+    def __call__(self, buffer_size: int) -> Tensor:
+        return torch.tensor(
+            [synth(buffer_size) for synth in self.synths]
+        ).sum(dim=0)
+
+    def __add__(self, other: NoiseSynth) -> NoiseSynth:
+        self.synths.append(other)
+        return self
+
 
 class Noise:
     @classmethod
