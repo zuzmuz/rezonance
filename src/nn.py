@@ -1,3 +1,4 @@
+import time
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -180,6 +181,8 @@ class Trainer:
                 device=torch.get_default_device()
             ),
         )
+
+        perf_counter = time.perf_counter()
         for epoch in range(nb_epoch):
             self.model.train()
             epoch_loss = 0
@@ -197,7 +200,9 @@ class Trainer:
                 print(
                     f"Epoch {epoch + 1}: "
                     f"Mean Squared Error = {epoch_loss / num_batches:.5f}, "
+                    f"Time = {time.perf_counter() - perf_counter:.2f} seconds"
                 )
+                perf_counter = time.perf_counter()
         return []
 
     def save_model(self, path: str):

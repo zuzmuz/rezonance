@@ -6,7 +6,7 @@ from argparse import ArgumentParser
 
 
 def main():
-    torch.set_default_device("mps")
+    torch.set_default_device("cpu")
 
     print("Using device:", torch.get_default_device())
 
