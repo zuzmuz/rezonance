@@ -6,7 +6,11 @@ import numpy as np
 import numpy.typing as npt
 import matplotlib.pyplot as plt
 
-from src.utils import pitch_from_freq, freq_from_pitch, gen_wav_from_spectrum
+from src.utils import (
+    pitch_from_freq,
+    freq_from_pitch,
+    gen_wav_from_spectrum,
+)
 from src.waveform import WaveformSynth
 
 
@@ -30,7 +34,7 @@ class SineWaveformDataset(Dataset):
         # max pitch is necessary to prevent aliasing
         # adding sines with frequencies close and higher than Shannon frequency
         # will add lower frequencies which are undesired
-        max_pitch = pitch_from_freq(0.25 * sample_rate, A4=A4) # type: ignore
+        max_pitch = pitch_from_freq(0.25 * sample_rate, A4=A4)  # type: ignore
 
         # TODO: consider performance benefits of torch tensors here
         self.pitches = np.linspace(
@@ -47,7 +51,7 @@ class SineWaveformDataset(Dataset):
         pitch = self.pitches[(idx // self.nb_phases)]
         phase = self.phases[idx % self.nb_phases]
 
-        waveform = self.synth.gen_single(pitch, phase) # type: ignore
+        waveform = self.synth.gen_single(pitch, phase)  # type: ignore
         waveform = torch.tensor(waveform, dtype=torch.float32)
 
         return waveform, pitch
@@ -84,7 +88,12 @@ class Trainer:
         self.optimizer = optim.Adam(self.model.parameters(), lr=0.001)
 
     def train(self, nb_epoch: int, dataset: Dataset):
-        data_loader = DataLoader(dataset, batch_size=32, shuffle=True)
+        data_loader = DataLoader(
+            dataset, 
+            batch_size=32,
+            shuffle=True,
+            generator=torch.Generator(device=torch.get_default_device())
+        )
         history = []
         for epoch in range(nb_epoch):
             self.model.train()
@@ -102,7 +111,7 @@ class Trainer:
                 #     hat_y.detach().numpy().argmax(axis=1)
                 # )
             history.append(epoch_loss / len(data_loader))
-            if (epoch + 1) % 20 == 0:
+            if (epoch + 1) % 10 == 0:
                 print(
                     f"Epoch {epoch + 1}: Mean Squared Error = {history[-1]:.5f}"
                 )
