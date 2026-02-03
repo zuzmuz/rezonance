@@ -70,7 +70,7 @@ class Noise:
             self.power = power
 
         def __call__(self, buffer_size: int) -> Tensor:
-            return self.generate_noise(buffer_size)
+            return self.power * self.generate_noise(buffer_size)
 
     @classmethod
     def blue(cls, power: Number) -> NoiseSynth:
@@ -91,7 +91,6 @@ class WaveformSynth:
         buffer_size (int): the buffer size of the generated waveform
         A4 (float): the reference frequency of the A4 note
     """
-
     def __init__(
         self,
         *,
@@ -116,7 +115,7 @@ class WaveformSynth:
         Returns:
             Sine wave, not normalized, consider scaling with std
         """
-        frequency = freq_from_pitch(pitch, A4=self.A4)  # type: ignore
+        frequency = freq_from_pitch(pitch, A4=self.A4)
         linspace = torch.linspace(
             0,
             self.buffer_size / self.sample_rate,

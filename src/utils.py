@@ -3,10 +3,10 @@ from torch.types import Number, Tensor
 
 
 def freq_from_pitch(
-    pitch: Tensor,
+    pitch: Number | Tensor,
     *,
     A4: Number,
-) -> Tensor:
+) -> Number | Tensor:
     """
     Generate a frequency in Hz from a MIDI pitch number.
     0 is C-1 (8.1758 Hz), 69 is A4
@@ -16,7 +16,7 @@ def freq_from_pitch(
     Returns:
         The frequency in Hz, same shape as the input pitch
     """
-    return torch.pow(2, (pitch - 69) / 12) * A4
+    return A4 * 2 ** ((pitch - 69) / 12)
 
 
 def pitch_from_freq(

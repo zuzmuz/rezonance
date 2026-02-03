@@ -2,8 +2,8 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import Dataset, DataLoader
+from torch.types import Number, Tensor
 import numpy as np
-import numpy.typing as npt
 
 from src.utils import (
     pitch_from_freq,
@@ -11,81 +11,81 @@ from src.utils import (
 from src.waveform import WaveformSynth, NoiseSynth
 
 
-class NoisySineWaveformDataset(Dataset):
-    def __init__(
-        self,
-        nb_pitches: int,
-        nb_phases: int,
-        /,
-        noises: list,
-        *,
-        sample_rate: np.floating,
-        buffer_size: np.int16,
-        A4: np.float32,
-        seed: int | None = None,
-    ):
-        if seed:
-            np.random.seed(seed)
-
-        self.nb_pitches = nb_pitches
-        self.nb_phases = nb_phases
-
-        self.noise_synth = NoiseSynth(
-            sample_rate=sample_rate, buffer_size=buffer_size
-        )
-        # Saving the noise function and not the noise signal
-        # Saving the noise signal might
-        # self.noises = [
-        #     noise(noise_synth.gaussian)
-        #     for noise_func, noise_power in noises
-        # ]
-        self.noises = noises
-
-        self.synth = WaveformSynth(
-            sample_rate=sample_rate,
-            buffer_size=buffer_size,
-            A4=A4,
-        )
-
-        # max pitch is necessary to prevent aliasing
-        # adding sines with frequencies close and higher than Shannon frequency
-        # will add lower frequencies which are undesired
-        max_pitch = pitch_from_freq(0.25 * sample_rate, A4=A4)  # type: ignore
-
-        # TODO: consider performance benefits of torch tensors here
-        self.pitches = np.linspace(
-            0, max_pitch, num=nb_pitches, dtype=np.float32
-        )
-        self.phases = np.linspace(
-            -1, 1, num=nb_phases, dtype=np.float32
-        )
-
-    def __len__(self):
-        return self.nb_pitches * self.nb_phases * len(self.noises)
-
-    def __getitem__(self, idx):
-        pitch = self.pitches[
-            idx // (self.nb_phases * len(self.noises))
-        ]
-        phase = self.phases[
-            (idx // len(self.noises)) % self.nb_phases
-        ]
-
-        waveform = self.synth.gen_single(pitch, phase)  # type: ignore
-
-        # if self.noises:  # in case of non empty noise list
-        # noise_func, noise_power = self.noises[
-        #     idx % len(self.noises)
-        # ]
-        # noise = (
-        #     noise_func(self.noise_synth.gaussian) * noise_power
-        # )
-        # waveform += noise
-
-        waveform /= waveform.std()
-        waveform = torch.tensor(waveform, dtype=torch.float32)
-
-        return waveform, pitch
+# class NoisySineWaveformDataset(Dataset):
+#     def __init__(
+#         self,
+#         nb_pitches: int,
+#         nb_phases: int,
+#         /,
+#         noises: list,
+#         *,
+#         sample_rate: np.floating,
+#         buffer_size: np.int16,
+#         A4: np.float32,
+#         seed: int | None = None,
+#     ):
+#         if seed:
+#             np.random.seed(seed)
+#
+#         self.nb_pitches = nb_pitches
+#         self.nb_phases = nb_phases
+#
+#         self.noise_synth = NoiseSynth(
+#             sample_rate=sample_rate, buffer_size=buffer_size
+#         )
+#         # Saving the noise function and not the noise signal
+#         # Saving the noise signal might
+#         # self.noises = [
+#         #     noise(noise_synth.gaussian)
+#         #     for noise_func, noise_power in noises
+#         # ]
+#         self.noises = noises
+#
+#         self.synth = WaveformSynth(
+#             sample_rate=sample_rate,
+#             buffer_size=buffer_size,
+#             A4=A4,
+#         )
+#
+#         # max pitch is necessary to prevent aliasing
+#         # adding sines with frequencies close and higher than Shannon frequency
+#         # will add lower frequencies which are undesired
+#         max_pitch = pitch_from_freq(0.25 * sample_rate, A4=A4)
+#
+#         # TODO: consider performance benefits of torch tensors here
+#         self.pitches = np.linspace(
+#             0, max_pitch, num=nb_pitches, dtype=np.float32
+#         )
+#         self.phases = np.linspace(
+#             -1, 1, num=nb_phases, dtype=np.float32
+#         )
+#
+#     def __len__(self):
+#         return self.nb_pitches * self.nb_phases * len(self.noises)
+#
+#     def __getitem__(self, idx):
+#         pitch = self.pitches[
+#             idx // (self.nb_phases * len(self.noises))
+#         ]
+#         phase = self.phases[
+#             (idx // len(self.noises)) % self.nb_phases
+#         ]
+#
+#         waveform = self.synth.gen_single(pitch, phase)  # type: ignore
+#
+#         # if self.noises:  # in case of non empty noise list
+#         # noise_func, noise_power = self.noises[
+#         #     idx % len(self.noises)
+#         # ]
+#         # noise = (
+#         #     noise_func(self.noise_synth.gaussian) * noise_power
+#         # )
+#         # waveform += noise
+#
+#         waveform /= waveform.std()
+#         waveform = torch.tensor(waveform, dtype=torch.float32)
+#
+#         return waveform, pitch
 
 
 class SineWaveformDataset(Dataset):
@@ -94,22 +94,18 @@ class SineWaveformDataset(Dataset):
         nb_pitches: int,
         nb_phases: int,
         /,
-        noises: list,
         *,
-        sample_rate: np.floating,
-        buffer_size: np.int16,
-        A4: np.float32,
+        sample_rate: Number,
+        buffer_size: int,
+        A4: Number,
         seed: int | None = None,
     ):
-        if seed:
-            np.random.seed(seed)
+        # TODO: seed torch
+        # if seed:
+        #     np.random.seed(seed)
 
         self.nb_pitches = nb_pitches
         self.nb_phases = nb_phases
-
-        self.noise_synth = NoiseSynth(
-            sample_rate=sample_rate, buffer_size=buffer_size
-        )
 
         self.synth = WaveformSynth(
             sample_rate=sample_rate,
@@ -120,7 +116,7 @@ class SineWaveformDataset(Dataset):
         # max pitch is necessary to prevent aliasing
         # adding sines with frequencies close and higher than Shannon frequency
         # will add lower frequencies which are undesired
-        max_pitch = pitch_from_freq(0.25 * sample_rate, A4=A4)  # type: ignore
+        max_pitch = pitch_from_freq(0.25 * sample_rate, A4=A4)
 
         # TODO: consider performance benefits of torch tensors here
         self.pitches = torch.linspace(
@@ -149,7 +145,7 @@ class SineWaveformDataset(Dataset):
 
 
 class MonophonicModel(nn.Module):
-    def __init__(self, buffer_size: np.int16):
+    def __init__(self, buffer_size: int):
         super(MonophonicModel, self).__init__()
 
         self.model = nn.Sequential(
