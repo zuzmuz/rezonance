@@ -21,7 +21,15 @@ class WaveformSynth:
         pitch: np.floating,
         phase: np.floating,
     ) -> npt.NDArray:
-        frequency = freq_from_pitch(pitch, A4=self.A4) # type: ignore
+        """
+        Generate sinusoidal waveform
+        Parameters:
+            - pitch: the pith number (logarithmic scale) 69 represents A4
+            - phase: the phase `[-1, 1]`
+        Returns:
+            Sine wave, not normalized, consider scaling with std
+        """
+        frequency = freq_from_pitch(pitch, A4=self.A4)  # type: ignore
         linspace = np.linspace(
             0,
             self.buffer_size / self.sample_rate,
@@ -42,7 +50,7 @@ class WaveformSynth:
               - The second row is the phase.
               - The third row is the power.
         Returns:
-            The sum of sinewaves with all
+            The sum of all sinewaves, the result is not scaled or normalized, consider dividing by std
         """
         linspace = np.linspace(
             0,
@@ -55,7 +63,9 @@ class WaveformSynth:
             * np.sin(
                 (
                     linspace[:, None]
-                    @ freq_from_pitch(params[0, None], A4=self.A4)  # frequency
+                    @ freq_from_pitch(
+                        params[0, None], A4=self.A4
+                    )  # frequency
                     + params[1, None]  # phase
                 )
                 * np.pi
