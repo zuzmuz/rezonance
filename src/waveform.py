@@ -1,76 +1,69 @@
 import numpy as np
-import numpy.typing as npt
+import torch
+from torch.types import Tensor, Number
+from typing import Callable
 
 from src.utils import freq_from_pitch
 
 
-class Noise:
-    def __init__(
-        self,
-        noise_func,
-    ):
-        self.noise_func = noise_func
-
-    def white(self) -> npt.NDArray:
-        return self.noise_func()
-
-    def pink(self) -> npt.NDArray:
-        return self.filter_noise(
-            lambda freq: 1
-            / np.where(freq == 0, float("inf"), np.sqrt(freq))
-        )
-
-    def brown(self) -> npt.NDArray:
-        return self.filter_noise(
-            lambda freq: 1 / np.where(freq == 0, float("inf"), freq)
-        )
-
-    def blue(self) -> npt.NDArray:
-        return self.filter_noise(lambda freq: np.sqrt(freq))
-
-    def violet(self) -> npt.NDArray:
-        return self.filter_noise(lambda freq: freq)
-
-    # def grey(self) -> npt.NDArray:
-    #     return self.filter_noise(lambda freq: np.sqrt(freq) / np.where(freq == 0, float("inf"), freq))
-
-    def filter_noise(self, filter_func) -> npt.NDArray:
-        noise = self.noise_func()
-        noise_fft = np.fft.rfft(noise)
-        filtered_freq = filter_func(np.fft.rfftfreq(noise.shape[0]))
-        # normalize filter to preserve power
-        filtered_noise_fft = noise_fft * filtered_freq
-        noise = np.fft.irfft(filtered_noise_fft)
-        noise /= noise.std()
-        return noise
-
-
 class NoiseSynth:
-    """
-    A simple noise synthesizer.
-    """
-
     def __init__(
         self,
-        *,
-        sample_rate: np.floating,
-        buffer_size: np.int16,
+        power: Number,
+        filter: Callable[[Tensor], Tensor],
     ):
-        self.sample_rate = sample_rate
-        self.buffer_size = buffer_size
+        self.power = power
+        self.filter = filter
 
-        self.gaussian = Noise(self._gaussian_noise)
-        self.uniform = Noise(self._uniform_noise)
+    def __call__(self, buffer_size: int) -> Tensor:
+        noise = self.generate_noise(buffer_size)
+        noise_fft = torch.fft.rfft(noise)
+        filtered_freq = self.filter(torch.fft.rfftfreq(buffer_size))
+        filtered_noise_fft = noise_fft * filtered_freq
+        noise = torch.fft.irfft(filtered_noise_fft)
+        return self.power * noise / noise.std()
 
-    def _gaussian_noise(self):
-        return np.random.normal(
-            loc=0.0,
-            scale=1.0,
-            size=self.buffer_size,
+    @classmethod
+    def generate_noise(cls, buffer_size: int) -> Tensor:
+        return torch.normal(
+            mean=torch.zeros(buffer_size),
+            std=1.0,
         )
 
-    def _uniform_noise(self) -> npt.NDArray:
-        return np.random.randn(self.buffer_size)  # type: ignore
+
+class Noise:
+    @classmethod
+    def brown(cls, power: Number) -> NoiseSynth:
+        return NoiseSynth(
+            power=power,
+            filter=lambda freq: 1
+            / torch.where(freq == 0, float("inf"), freq),
+        )
+
+    @classmethod
+    def pink(cls, power: Number) -> NoiseSynth:
+        return NoiseSynth(
+            power=power,
+            filter=lambda freq: 1
+            / torch.where(freq == 0, float("inf"), torch.sqrt(freq)),
+        )
+
+    class white(NoiseSynth):
+        def __init__(self, power: Number):
+            self.power = power
+
+        def __call__(self, buffer_size: int) -> Tensor:
+            return self.generate_noise(buffer_size)
+
+    @classmethod
+    def blue(cls, power: Number) -> NoiseSynth:
+        return NoiseSynth(
+            power=power, filter=lambda freq: torch.sqrt(freq)
+        )
+
+    @classmethod
+    def violet(cls, power: Number) -> NoiseSynth:
+        return NoiseSynth(power=power, filter=lambda freq: freq)
 
 
 class WaveformSynth:
@@ -85,9 +78,9 @@ class WaveformSynth:
     def __init__(
         self,
         *,
-        sample_rate: np.floating,
-        buffer_size: np.int16,
-        A4: np.floating,
+        sample_rate: Number,
+        buffer_size: int,
+        A4: Number,
     ):
         self.sample_rate = sample_rate
         self.buffer_size = buffer_size
@@ -95,29 +88,29 @@ class WaveformSynth:
 
     def gen_single(
         self,
-        pitch: np.floating,
-        phase: np.floating,
-    ) -> npt.NDArray:
+        pitch: Number,
+        phase: Number,
+    ) -> Tensor:
         """
         Generate sinusoidal waveform
         Parameters:
-            pitch (float): the pith number (logarithmic scale) 69 represents A4
+            pitch (float): the pitch number (logarithmic scale) 69 represents A4
             phase (float): the phase `[-1, 1]`
         Returns:
             Sine wave, not normalized, consider scaling with std
         """
         frequency = freq_from_pitch(pitch, A4=self.A4)  # type: ignore
-        linspace = np.linspace(
+        linspace = torch.linspace(
             0,
             self.buffer_size / self.sample_rate,
-            num=self.buffer_size,
+            self.buffer_size,
         )
-        return np.sin((frequency * linspace + phase) * np.pi)
+        return torch.sin((frequency * linspace + phase) * np.pi)
 
     def gen_multiple(
         self,
-        params: npt.NDArray,
-    ) -> npt.NDArray:
+        params: Tensor,
+    ) -> Tensor:
         """
         Generating waveform as sum of sinewaves from a distriution of parameters.
         Parameters:
@@ -129,10 +122,10 @@ class WaveformSynth:
         Returns:
             The sum of all sinewaves, the result is not scaled or normalized, consider dividing by std
         """
-        linspace = np.linspace(
+        linspace = torch.linspace(
             0,
             self.buffer_size / self.sample_rate,
-            num=self.buffer_size,
+            self.buffer_size,
         )
 
         return (
