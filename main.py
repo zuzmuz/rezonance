@@ -1,4 +1,5 @@
 from argparse import ArgumentParser
+import torch
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -7,7 +8,7 @@ from src.training import SineWaveformDataset, MonophonicModel, Trainer
 
 class Modes:
     @staticmethod
-    def train(verbose: bool = False):
+    def train(*args, verbose: bool = False, **kwargs):
         sample_rate = np.float32(16_000)
         buffer_size = np.int16(1024)
         A4 = np.float32(440)
@@ -37,8 +38,12 @@ class Modes:
         plt.show()
         # trainer.save_model("monophonic_model.pth")
 
+    @staticmethod
+    def defaults(*args, **kwargs):
+        print(f'Default device: {torch.get_default_device()}')
 
 def main():
+    torch.set_default_device('mps')
 
     plt.rcParams['axes.grid'] = True
     plt.rcParams['figure.autolayout'] = True
@@ -47,7 +52,7 @@ def main():
     parser.add_argument(
         "mode",
         type=str,
-        choices=["train", "validate"],
+        choices=["train", "validate", "defaults"],
         help="Mode to run the application in.",
     )
     parser.add_argument(
@@ -62,6 +67,7 @@ def main():
     )
     args = parser.parse_args()
 
+    
     Modes.__dict__[args.mode](verbose=args.verbose)
 
 
