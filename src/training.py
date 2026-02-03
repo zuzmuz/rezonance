@@ -6,11 +6,8 @@ import numpy as np
 import numpy.typing as npt
 import matplotlib.pyplot as plt
 
-from src.spectrum import (
-    SpectrumSynth,
-    pitch_from_freq,
-    gen_wav_from_spectrum,
-)
+from src.utils import pitch_from_freq, freq_from_pitch, gen_wav_from_spectrum
+from src.spectrum import SpectrumSynth
 
 
 class SineWaveformDataset(Dataset):
@@ -30,7 +27,7 @@ class SineWaveformDataset(Dataset):
             sample_rate=sample_rate, buffer_size=buffer_size, A4=A4
         )
 
-        max_pitch = pitch_from_freq(0.25 * sample_rate, A4=A4)
+        max_pitch = pitch_from_freq(0.25 * sample_rate, A4=A4) # type: ignore
 
         # TODO: consider performance benefits of torch tensors here
         self.pitches = np.linspace(
@@ -55,7 +52,7 @@ class SineWaveformDataset(Dataset):
             / self.nb_phases
         )
 
-        spectrum = self.synth.gen_sin(pitch, phase_start, phase_end)
+        spectrum = self.synth.gen_sin(pitch, phase_start, phase_end) # type
         waveform = gen_wav_from_spectrum(spectrum)
         waveform = torch.tensor(waveform, dtype=torch.float32)
 

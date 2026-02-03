@@ -49,14 +49,15 @@ class WaveformSynth:
             self.buffer_size / self.sample_rate,
             num=self.buffer_size,
         )
+
         return (
-            params[2]  # power
+            params[2, None]  # power
             * np.sin(
                 (
-                    linspace
-                    * freq_from_pitch(params[0], A4=self.A4)  # frequency
-                    + params[1]  # phase
+                    linspace[:, None]
+                    @ freq_from_pitch(params[0, None], A4=self.A4)  # frequency
+                    + params[1, None]  # phase
                 )
                 * np.pi
             )
-        ).sum()
+        ).sum(axis=1)

@@ -49,20 +49,3 @@ def gen_wav_from_spectrum(
     """
     audio = np.fft.irfft(spectrum)
     return audio
-
-def gen_sin_from_pitch(
-    pitch: np.floatin,
-    phase: np.floating,
-    size: np.int16,
-) -> npt.NDArray:
-    """
-    Generate a time-domain waveform of a sine wave from a pitch and a phase
-    Parameters:
-        - pitch: The input pitch number as a floating point value
-        - phase: The phase offset, value between `[-1, 1]`
-    Rerturns:
-        Array containing the sine wave samples
-    """
-    return np.sin(np.
-
-
