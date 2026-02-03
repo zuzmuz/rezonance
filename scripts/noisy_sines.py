@@ -30,6 +30,8 @@ def run(*args, **kwargs):
     for idx, (noise_func, noise_power, title) in enumerate(noises):
         plt.subplot(len(noises), 1, idx + 1)
         plt.title(title)
+        noise = noise_func(noise_synth.gaussian)
+        print(f'power of noise "{title}": {np.std(noise)}')
         plt.plot(
             waveform + noise_power * noise_func(noise_synth.gaussian),
             linewidth=0.5,
