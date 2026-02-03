@@ -50,41 +50,17 @@ def gen_wav_from_spectrum(
     audio = np.fft.irfft(spectrum)
     return audio
 
-
-class SpectrumSynth:
-    def __init__(
-        self,
-        *,
-        sample_rate: np.floating,
-        buffer_size: np.int16,
-        A4: np.float32,
-    ):
-        self.sample_rate = sample_rate
-        self.buffer_size = buffer_size
-        self.A4 = A4
-
-    def gen_sin(
-        self,
-        pitch: np.floating,
-        phase_start: np.floating,
-        phase_end: np.floating,
-    ) -> npt.NDArray:
-        # we only need half the spectrum for real signals
-        out = np.zeros(self.buffer_size // 2 + 1, dtype=np.complex64)
-
-        frequency = freq_from_pitch(pitch, A4=self.A4)
-        index = frequency * self.buffer_size / self.sample_rate
-
-        floor_index = np.int16(np.floor(index))
-        ceil_index = np.int16(np.ceil(index))
-
-        out[floor_index] = ceil_index - index
-        out[ceil_index] = index - floor_index
-
-        phases = np.linspace(
-            phase_start, phase_end, num=self.buffer_size // 2 + 1
-        )
-
-        out = out * np.exp(1j * phases)
-
-        return out
+def gen_sin_from_pitch(
+    pitch: np.floatin,
+    phase: np.floating,
+    size: np.int16,
+) -> npt.NDArray:
+    """
+    Generate a time-domain waveform of a sine wave from a pitch and a phase
+    Parameters:
+        - pitch: The input pitch number as a floating point value
+        - phase: The phase offset, value between `[-1, 1]`
+    Rerturns:
+        The audio
+    """
+    pass

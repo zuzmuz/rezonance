@@ -2,12 +2,11 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import Dataset, DataLoader
-import matplotlib.pyplot as plt
 import numpy as np
 import numpy.typing as npt
 import matplotlib.pyplot as plt
 
-from src.generator import (
+from src.spectrum import (
     SpectrumSynth,
     pitch_from_freq,
     gen_wav_from_spectrum,
@@ -23,7 +22,6 @@ class SineWaveformDataset(Dataset):
         sample_rate: np.floating,
         buffer_size: np.int16,
         A4: np.float32,
-        seed: int | None = None,
     ):
         self.nb_pitches = nb_pitches
         self.nb_phases = nb_phases
