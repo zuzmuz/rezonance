@@ -123,11 +123,14 @@ class SineWaveformDataset(Dataset):
         max_pitch = pitch_from_freq(0.25 * sample_rate, A4=A4)  # type: ignore
 
         # TODO: consider performance benefits of torch tensors here
-        self.pitches = np.linspace(
-            0, max_pitch, num=nb_pitches, dtype=np.float32
+        self.pitches = torch.linspace(
+            0,
+            max_pitch,
+            nb_pitches,
+            dtype=torch.float32,
         )
-        self.phases = np.linspace(
-            -1, 1, num=nb_phases, dtype=np.float32
+        self.phases = torch.linspace(
+            -1, 1, nb_phases, dtype=torch.float32
         )
 
     def __len__(self):

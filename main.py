@@ -6,7 +6,9 @@ from argparse import ArgumentParser
 
 
 def main():
-    torch.set_default_device("cpu")
+    torch.set_default_device("mps")
+
+    print("Using device:", torch.get_default_device())
 
     plt.rcParams["axes.grid"] = True
     plt.rcParams["figure.autolayout"] = True
@@ -16,8 +18,8 @@ def main():
         "mode",
         type=str,
         choices=[
-            module_name 
-            for _, module_name, _ in pkgutil.iter_modules(['scripts'])
+            module_name
+            for _, module_name, _ in pkgutil.iter_modules(["scripts"])
         ],
         help="Mode to run the application in.",
     )
@@ -33,7 +35,7 @@ def main():
     )
     args = parser.parse_args()
 
-    module = importlib.import_module(f'scripts.{args.mode}')
+    module = importlib.import_module(f"scripts.{args.mode}")
     module.run(verbose=args.verbose)
 
 
