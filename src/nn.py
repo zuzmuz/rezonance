@@ -129,22 +129,15 @@ class SineWaveformDataset(Dataset):
         )
 
         self.data = torch.cartesian_prod(self.pitches, self.phases).T
-        print(f'Generated dataset of size: {self.data.shape}')
-
-        self.data = self.synth.gen_single(self.data[0], self.data[1])
+        self.data = self.synth.gen_single(self.data)
+        self.data /= self.data.std(dim=1, keepdim=True)
 
     def __len__(self):
-        return self.nb_pitches * self.nb_phases
+        return self.data.size(0)
 
-    def __getitem__(self, idx):
-        pitch = self.pitches[idx // self.nb_phases]
-        phase = self.phases[idx % self.nb_phases]
-
-        waveform = self.synth.gen_single(pitch, phase)
-
-        waveform /= waveform.std()
-        waveform = torch.tensor(waveform, dtype=torch.float32)
-
+    def __getitem__(self, idx) -> tuple[Tensor, Tensor]:
+        pitch = self.pitches[idx // self.phases.size(0)]
+        waveform = self.data[idx]
         return waveform, pitch
 
 
