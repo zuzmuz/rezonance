@@ -12,6 +12,7 @@ def main():
 
     plt.rcParams["axes.grid"] = True
     plt.rcParams["figure.autolayout"] = True
+    plt.style.use('dark_background')
 
     parser = ArgumentParser()
     parser.add_argument(

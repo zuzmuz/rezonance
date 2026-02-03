@@ -2,7 +2,12 @@ import torch
 import numpy as np
 import matplotlib.pyplot as plt
 
-from src.nn import SineWaveformDataset, MonophonicModel, Trainer
+from src.nn import (
+    NoisySineWaveformDataset,
+    SineWaveformDataset,
+    LinearModel1,
+    Trainer,
+)
 from src.waveform import WaveformSynth, Noise
 
 
@@ -11,17 +16,22 @@ def run(*args, verbose: bool = False, **kwargs):
     buffer_size = 1024
     A4 = 440.0
 
-    dataset = SineWaveformDataset(
+    dataset = NoisySineWaveformDataset(
         500,
         50,
+        noises=[
+            Noise.white(0.05),
+            Noise.pink(0.1),
+            Noise.brown(0.2),
+        ],
         sample_rate=sample_rate,
         buffer_size=buffer_size,
         A4=A4,
     )
 
-    trainer = Trainer(MonophonicModel(buffer_size))
+    trainer = Trainer(LinearModel1(buffer_size))
 
-    history = trainer.train(50, dataset)
+    history = trainer.train(1, dataset)
     # plt.figure()
     # plt.title('history')
     # plt.plot(history)

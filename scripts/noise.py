@@ -10,7 +10,7 @@ def run(*args, **kwargs):
     plt.figure()
 
     noises: list[tuple[str, str, NoiseSynth]] = [
-        ("white", "black", Noise.white(1.0)),
+        ("white", "white", Noise.white(1.0)),
         ("pink", "hotpink", Noise.pink(1.0)),
         ("brown", "brown", Noise.brown(1.0)),
         ("blue", "blue", Noise.blue(1.0)),

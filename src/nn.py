@@ -40,7 +40,7 @@ class NoisySineWaveformDataset(Dataset):
             [synth(buffer_size) for synth in noises]
         )
 
-        print(f'Noises shape: {self.noises.shape}')
+        print(f"Noises shape: {self.noises.shape}")
 
         # max pitch is necessary to prevent aliasing
         # adding sines with frequencies close and higher than Shannon frequency
@@ -50,12 +50,12 @@ class NoisySineWaveformDataset(Dataset):
         self.pitches = torch.linspace(
             20, max_pitch, nb_pitches, dtype=torch.float32
         )
-        print(f'Pitches shape: {self.pitches.shape}')
+        print(f"Pitches shape: {self.pitches.shape}")
 
         self.phases = torch.linspace(
             -1, 1, nb_phases, dtype=torch.float32
         )
-        print(f'Phases shape: {self.phases.shape}')
+        print(f"Phases shape: {self.phases.shape}")
 
         # Combining pitches, phases, and noises into a 2D tensor
         # shape `(2, nb_pitches * nb_phases * nb_noises)`
@@ -66,17 +66,21 @@ class NoisySineWaveformDataset(Dataset):
             torch.zeros(self.noises.size(0)),
         ).T[0:2]
 
-        print(f'Data shape before waveform generation: {self.data.shape}')
+        print(
+            f"Data shape before waveform generation: {self.data.shape}"
+        )
 
         self.data = self.synth.gen_mono(self.data)
-        print(f'Data shape after waveform generation: {self.data.shape}')
+        print(
+            f"Data shape after waveform generation: {self.data.shape}"
+        )
 
-        self.noises = self.noises.repeat(
+        repeated_noises = self.noises.repeat(
             self.pitches.size(0) * self.phases.size(0), 1
         )
-        print(f'Noises shape after repeat: {self.noises.shape}')
+        print(f"Noises shape after repeat: {repeated_noises.shape}")
 
-        self.data += self.noises
+        self.data += repeated_noises
 
         self.data /= self.data.std(dim=1, keepdim=True)
 
@@ -84,7 +88,9 @@ class NoisySineWaveformDataset(Dataset):
         return self.data.size(0)
 
     def __getitem__(self, idx):
-        pitch = self.pitches[idx // self.phases.size(0)]
+        pitch = self.pitches[
+            idx // (self.phases.size(0) + self.noises.size(0))
+        ]
         waveform = self.data[idx]
         return waveform, pitch
 
