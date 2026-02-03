@@ -78,7 +78,7 @@ class Modes:
 
         dataset = SineWaveformDataset(
             1000,
-            4,
+            100,
             sample_rate=sample_rate,
             buffer_size=buffer_size,
             A4=A4,
@@ -89,17 +89,17 @@ class Modes:
             for idx in range(16 * 600, 16 * 600 + 6):
                 waveform, pitch = dataset[idx]
                 plt.subplot(3, 2, idx + 1 - 16 * 600)
-                plt.plot(waveform.numpy(), label=f"{pitch:.2f}")
+                plt.plot(waveform.detach().cpu().numpy(), label=f"{pitch:.2f}")
                 plt.legend()
 
         trainer = Trainer(MonophonicModel(buffer_size))
 
-        # history = trainer.train(1, dataset)
+        history = trainer.train(1000, dataset)
         # plt.figure()
         # plt.title('history')
         # plt.plot(history)
         plt.show()
-        # trainer.save_model("monophonic_model.pth")
+        trainer.save_model("monophonic_model.pth")
 
     @staticmethod
     def defaults(*args, **kwargs):

@@ -7,7 +7,7 @@ import numpy.typing as npt
 import matplotlib.pyplot as plt
 
 from src.utils import pitch_from_freq, freq_from_pitch, gen_wav_from_spectrum
-from src.spectrum import SpectrumSynth
+from src.waveform import WaveformSynth
 
 
 class SineWaveformDataset(Dataset):
@@ -23,10 +23,13 @@ class SineWaveformDataset(Dataset):
         self.nb_pitches = nb_pitches
         self.nb_phases = nb_phases
 
-        self.synth = SpectrumSynth(
+        self.synth = WaveformSynth(
             sample_rate=sample_rate, buffer_size=buffer_size, A4=A4
         )
 
+        # max pitch is necessary to prevent aliasing
+        # adding sines with frequencies close and higher than Shannon frequency
+        # will add lower frequencies which are undesired
         max_pitch = pitch_from_freq(0.25 * sample_rate, A4=A4) # type: ignore
 
         # TODO: consider performance benefits of torch tensors here
@@ -38,22 +41,13 @@ class SineWaveformDataset(Dataset):
         )
 
     def __len__(self):
-        return self.nb_pitches * self.nb_phases**2
+        return self.nb_pitches * self.nb_phases
 
     def __getitem__(self, idx):
-        pitch_idx = idx // (self.nb_phases**2)
-        pitch = self.pitches[pitch_idx]
-        phase_start_idx = (idx // self.nb_phases) % self.nb_phases
-        phase_end_idx = idx % self.nb_phases
-        phase_start = self.phases[phase_start_idx]
-        phase_end = (
-            self.synth.buffer_size
-            * self.phases[phase_end_idx]
-            / self.nb_phases
-        )
+        pitch = self.pitches[(idx // self.nb_phases)]
+        phase = self.phases[idx % self.nb_phases]
 
-        spectrum = self.synth.gen_sin(pitch, phase_start, phase_end) # type
-        waveform = gen_wav_from_spectrum(spectrum)
+        waveform = self.synth.gen_single(pitch, phase) # type: ignore
         waveform = torch.tensor(waveform, dtype=torch.float32)
 
         return waveform, pitch

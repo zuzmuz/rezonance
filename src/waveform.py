@@ -64,10 +64,11 @@ class WaveformSynth:
                 (
                     linspace[:, None]
                     @ freq_from_pitch(
-                        params[0, None], A4=self.A4
+                        params[0, None],  # pitch
+                        A4=self.A4,
                     )  # frequency
                     + params[1, None]  # phase
                 )
                 * np.pi
             )
-        ).sum(axis=1)
+        ).sum(axis=1) # summing all sines together
