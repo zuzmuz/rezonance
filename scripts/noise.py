@@ -12,7 +12,7 @@ def run(*args, **kwargs):
         buffer_size=buffer_size,
     )
 
-    plt.figure(figsize=(13, 8))
+    plt.figure()
 
     noises = [
         ("white guassian", "black", noise_synth.gaussian.white()),
@@ -35,11 +35,8 @@ def run(*args, **kwargs):
         plt.plot(noise, color=color, linewidth=0.5)
         plt.subplot(noises_len, 2, idx * 2 + 2)
         plt.title(f"{title} fft")
-        plt.plot(np.abs(np.fft.fft(noise)), color=color, linewidth=0.5)
+        plt.plot(
+            np.abs(np.fft.fft(noise)), color=color, linewidth=0.5
+        )
 
-    # plt.subplot(3, 1, 3)
-    # plt.title("Pink Noise")
-    # plt.plot(pink_noise)
-
-    plt.tight_layout()
     plt.show()

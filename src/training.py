@@ -20,7 +20,7 @@ class SineWaveformDataset(Dataset):
         nb_pitches: int,
         nb_phases: int,
         /,
-        noises: npt.NDArray,
+        noises: list,
         *,
         sample_rate: np.floating,
         buffer_size: np.int16,
@@ -69,10 +69,16 @@ class SineWaveformDataset(Dataset):
     def __getitem__(self, idx):
         pitch = self.pitches[idx // (self.nb_phases * len(self.noises))]
         phase = self.phases[(idx // len(self.noises)) % self.nb_phases]
-        noise_func, noise_power = self.noises[idx % len(self.noises)]
+
 
         waveform = self.synth.gen_single(pitch, phase)  # type: ignore
-        noise = noise_func(self.noise_synth) * noise_power
+
+        if self.noises: # in case of non empty noise list
+            noise_func, noise_power = self.noises[idx % len(self.noises)]
+            noise = noise_func(self.noise_synth) * noise_power
+            waveform += noise
+
+        waveform /= waveform.std()
         waveform = torch.tensor(waveform, dtype=torch.float32)
 
         return waveform, pitch

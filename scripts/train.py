@@ -13,6 +13,7 @@ def run(*args, verbose: bool = False, **kwargs):
     dataset = SineWaveformDataset(
         1000,
         100,
+        [],
         sample_rate=sample_rate,
         buffer_size=buffer_size,
         A4=A4,

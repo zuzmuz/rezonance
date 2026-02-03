@@ -3,7 +3,7 @@ import numpy.typing as npt
 
 from src.utils import freq_from_pitch
 
-class BaseNoise:
+class Noise:
     def __init__(
         self,
         noise_func,
@@ -59,8 +59,8 @@ class NoiseSynth:
         self.sample_rate = sample_rate
         self.buffer_size = buffer_size
 
-        self.gaussian = BaseNoise(self._gaussian_noise)
-        self.uniform = BaseNoise(self._uniform_noise)
+        self.gaussian = Noise(self._gaussian_noise)
+        self.uniform = Noise(self._uniform_noise)
 
     def _gaussian_noise(self):
         return np.random.normal(
