@@ -3,54 +3,53 @@ import numpy.typing as npt
 
 from src.utils import freq_from_pitch
 
+class BaseNoise:
+    def __init__(
+        self,
+        noise_func,
+    ):
+        self.noise_func = noise_func
+
+    def white(self) -> npt.NDArray:
+        return self.noise_func()
+
+    def pink(self) -> npt.NDArray:
+        return self.filter_noise(
+            lambda freq: 1
+            / np.where(freq == 0, float("inf"), np.sqrt(freq))
+        )
+
+    def brown(self) -> npt.NDArray:
+        return self.filter_noise(
+            lambda freq: 1
+            / np.where(freq == 0, float("inf"), freq)
+        )
+
+    def blue(self) -> npt.NDArray:
+        return self.filter_noise(lambda freq: np.sqrt(freq))
+
+    def violet(self) -> npt.NDArray:
+        return self.filter_noise(lambda freq: freq)
+
+    # def grey(self) -> npt.NDArray:
+    #     return self.filter_noise(lambda freq: np.sqrt(freq) / np.where(freq == 0, float("inf"), freq))
+
+    def filter_noise(self, filter_func) -> npt.NDArray:
+        noise = self.noise_func()
+        noise_fft = np.fft.rfft(noise)
+        filtered_freq = filter_func(
+            np.fft.rfftfreq(noise.shape[0])
+        )
+        # normalize filter to preserve power
+        filtered_freq /= filtered_freq.std()
+        filtered_noise = noise_fft * filtered_freq
+        return np.fft.irfft(filtered_noise)
+
 
 class NoiseSynth:
     """
     A simple noise synthesizer.
     """
-
-    class BaseNoise:
-        def __init__(
-            self,
-            noise_func,
-        ):
-            self.noise_func = noise_func
-
-        def white(self) -> npt.NDArray:
-            return self.noise_func()
-
-        def pink(self) -> npt.NDArray:
-            return self.filter_noise(
-                lambda freq: 1
-                / np.where(freq == 0, float("inf"), np.sqrt(freq))
-            )
-
-        def brown(self) -> npt.NDArray:
-            return self.filter_noise(
-                lambda freq: 1
-                / np.where(freq == 0, float("inf"), freq)
-            )
-
-        def blue(self) -> npt.NDArray:
-            return self.filter_noise(lambda freq: np.sqrt(freq))
-
-        def violet(self) -> npt.NDArray:
-            return self.filter_noise(lambda freq: freq)
-
-        # def grey(self) -> npt.NDArray:
-        #     return self.filter_noise(lambda freq: np.sqrt(freq) / np.where(freq == 0, float("inf"), freq))
-
-        def filter_noise(self, filter_func) -> npt.NDArray:
-            noise = self.noise_func()
-            noise_fft = np.fft.rfft(noise)
-            filtered_freq = filter_func(
-                np.fft.rfftfreq(noise.shape[0])
-            )
-            # normalize filter to preserve power
-            filtered_freq /= filtered_freq.std()
-            filtered_noise = noise_fft * filtered_freq
-            return np.fft.irfft(filtered_noise)
-
     def __init__(
         self,
         *,
@@ -60,8 +59,8 @@ class NoiseSynth:
         self.sample_rate = sample_rate
         self.buffer_size = buffer_size
 
-        self.gaussian = NoiseSynth.BaseNoise(self._gaussian_noise)
-        self.uniform = NoiseSynth.BaseNoise(self._uniform_noise)
+        self.gaussian = BaseNoise(self._gaussian_noise)
+        self.uniform = BaseNoise(self._uniform_noise)
 
     def _gaussian_noise(self):
         return np.random.normal(
@@ -77,6 +76,10 @@ class NoiseSynth:
 class WaveformSynth:
     """
     A simple waveform synthesizer generating sinewaves from pitch and phase.
+    Parameters:
+        sample_rate (float): the sample rate of the generated waveform
+        buffer_size (int): the buffer size of the generated waveform
+        A4 (float): the reference frequency of the A4 note
     """
 
     def __init__(

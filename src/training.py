@@ -11,7 +11,7 @@ from src.utils import (
     freq_from_pitch,
     gen_wav_from_spectrum,
 )
-from src.waveform import WaveformSynth
+from src.waveform import WaveformSynth, NoiseSynth
 
 
 class SineWaveformDataset(Dataset):
@@ -20,15 +20,34 @@ class SineWaveformDataset(Dataset):
         nb_pitches: int,
         nb_phases: int,
         /,
+        noises: npt.NDArray,
+        *,
         sample_rate: np.floating,
         buffer_size: np.int16,
         A4: np.float32,
+        seed: int | None = None,
     ):
+        if seed:
+            np.random.seed(seed)
+
         self.nb_pitches = nb_pitches
         self.nb_phases = nb_phases
 
+        self.noise_synth = NoiseSynth(
+            sample_rate=sample_rate, buffer_size=buffer_size
+        )
+        # Saving the noise function and not the noise signal
+        # Saving the noise signal might 
+        # self.noises = [
+        #     noise(noise_synth.gaussian)
+        #     for noise_func, noise_power in noises
+        # ]
+        self.noises = noises
+
         self.synth = WaveformSynth(
-            sample_rate=sample_rate, buffer_size=buffer_size, A4=A4
+            sample_rate=sample_rate,
+            buffer_size=buffer_size,
+            A4=A4,
         )
 
         # max pitch is necessary to prevent aliasing
@@ -45,13 +64,15 @@ class SineWaveformDataset(Dataset):
         )
 
     def __len__(self):
-        return self.nb_pitches * self.nb_phases
+        return self.nb_pitches * self.nb_phases * len(self.noises)
 
     def __getitem__(self, idx):
-        pitch = self.pitches[(idx // self.nb_phases)]
-        phase = self.phases[idx % self.nb_phases]
+        pitch = self.pitches[idx // (self.nb_phases * len(self.noises))]
+        phase = self.phases[(idx // len(self.noises)) % self.nb_phases]
+        noise_func, noise_power = self.noises[idx % len(self.noises)]
 
         waveform = self.synth.gen_single(pitch, phase)  # type: ignore
+        noise = noise_func(self.noise_synth) * noise_power
         waveform = torch.tensor(waveform, dtype=torch.float32)
 
         return waveform, pitch
@@ -89,10 +110,12 @@ class Trainer:
 
     def train(self, nb_epoch: int, dataset: Dataset):
         data_loader = DataLoader(
-            dataset, 
+            dataset,
             batch_size=32,
             shuffle=True,
-            generator=torch.Generator(device=torch.get_default_device())
+            generator=torch.Generator(
+                device=torch.get_default_device()
+            ),
         )
         history = []
         for epoch in range(nb_epoch):
