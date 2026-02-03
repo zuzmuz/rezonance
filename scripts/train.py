@@ -31,7 +31,7 @@ def run(*args, verbose: bool = False, **kwargs):
 
     trainer = Trainer(LinearModel1(buffer_size))
 
-    history = trainer.train(1, dataset)
+    history = trainer.train(6, dataset)
     # plt.figure()
     # plt.title('history')
     # plt.plot(history)
