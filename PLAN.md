@@ -6,6 +6,11 @@
 - [X] single sine noisy dataset generation
 - [ ] complex harmonic profile dataset
 - [ ] complex harmonic profile dataset with noise
+- [ ] fully parametric dataset (pitches, harmonics, phases, noises)
+    - [ ] have attribute data class for generators
+        - [ ] pitches (min, max, num)
+        - [ ] harmonic dist
+            - [ ] frequ
 
 # Training
 

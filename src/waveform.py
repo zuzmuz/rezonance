@@ -214,6 +214,15 @@ class Timbre:
         self.A4 = A4
 
     def gen_harmonics(self, pitch: Tensor) -> Tensor:
+        """
+        Generate harmonics from pitch according to the timbre's distribution.
+        Parameters:
+            pitch (tensor): the pitch or pitches to generate harmonics for
+                if pitch is a scalar, the output shape is `(n, 3)`,
+                if pitch is a 1D tensor of shape `(nb_pitches,)`, the output shape is `(nb_pitches, n, 3)`
+        Returns:
+            The harmonics tensor, shape depending on the input pitch shape
+        """
         frequency = freq_from_pitch(pitch, A4=self.A4)
         # here pitch can be a tensor shape `(nb_pitches)`
 
