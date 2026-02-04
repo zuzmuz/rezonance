@@ -201,6 +201,7 @@ class Timbre:
         sample_rate (float): the sample rate of the generated waveform, required to limit frequencies generated to the Shannon frequency
         A4 (float): the reference frequency of the A4 note
     """
+
     def __init__(
         self,
         distriution: Tensor,
@@ -211,7 +212,7 @@ class Timbre:
         self.sample_rate = sample_rate
         self.distriution = distriution
         self.A4 = A4
-    
+
     def gen_harmonics(self, pitch: Tensor) -> Tensor:
         frequency = freq_from_pitch(pitch, A4=self.A4)
 
