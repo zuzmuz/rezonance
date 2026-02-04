@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 
 from src.waveform import Noise
-from src.nn import NoisySineWaveformDataset
+from src.dataset import NoisySineWaveformDataset
 
 def run(*args, **kwargs):
     sample_rate = 16_000.0

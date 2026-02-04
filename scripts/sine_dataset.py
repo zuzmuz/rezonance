@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 
-from src.nn import SineWaveformDataset
+from src.dataset import SineWaveformDataset
 
 
 def run(*args, **kwargs):

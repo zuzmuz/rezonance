@@ -215,8 +215,20 @@ class Timbre:
 
     def gen_harmonics(self, pitch: Tensor) -> Tensor:
         frequency = freq_from_pitch(pitch, A4=self.A4)
+        # here pitch can be a tensor shape `(nb_pitches)`
 
-        harmonics = self.distriution.clone()
-        harmonics[:, 0] = frequency * harmonics[:, 0]
+        harmonics = self.distriution.clone()  # shape `(n, 3)`
 
+        if pitch.ndim == 1:
+            harmonics = harmonics.unsqueeze(0).repeat(
+                pitch.size(0), 1, 1
+            )
+            frequency = frequency.unsqueeze(1)
+            harmonics[:, :, 0] = frequency * harmonics[:, :, 0]
+        elif pitch.ndim == 0:
+            harmonics[:, 0] = frequency * harmonics[:, 0]
+        else:
+            raise ValueError(
+                "Pitch should be a scalar or a 1D tensor"
+            )
         return harmonics

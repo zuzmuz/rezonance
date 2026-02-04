@@ -1,10 +1,11 @@
 import torch
 import numpy as np
 import matplotlib.pyplot as plt
-
-from src.nn import (
+from src.dataset import (
     NoisySineWaveformDataset,
     SineWaveformDataset,
+)
+from src.nn import (
     LinearModel1,
     Trainer,
 )

@@ -6,7 +6,7 @@ from src.utils import (
     freq_from_pitch,
     pitch_from_freq,
 )
-from src.waveform import WaveformSynth, NoiseSynth
+from src.waveform import Timbre, WaveformSynth, NoiseSynth
 
 
 logger = logging.getLogger(__name__)
@@ -194,3 +194,70 @@ class SineWaveformDataset(Dataset):
         pitch = self.pitches[idx // self.phases.size(0)]
         waveform = self.data[idx]
         return waveform, pitch
+
+class TimbralWaveformDataset(Dataset):
+
+    def __init__(
+        self,
+        nb_pitches: int,
+        nb_phases: int,
+        /,
+        timbres: list[Timbre],
+        noises: list[NoiseSynth],
+        *,
+        sample_rate: Number = 16_000.0,
+        buffer_size: int = 1024,
+        A4: Number = 440.0,
+        min_pitch: Number = 20,
+        max_pitch: Number | None = None,
+        seed: int | None = None,
+    ):
+        if seed:
+            torch.manual_seed(seed)
+
+        self.synth = WaveformSynth(
+            sample_rate=sample_rate,
+            buffer_size=buffer_size,
+            A4=A4,
+        )
+
+        # Creating all noises
+        # shape `(nb_noises, buffer_size)`
+        self.noises = torch.stack(
+            [synth(buffer_size) for synth in noises]
+        )
+
+        
+        # max pitch is necessary to prevent aliasing
+        # adding sines with frequencies close and higher than Shannon frequency
+        # will add lower frequencies which are undesired
+        max_possible_pitch = pitch_from_freq(
+            0.25 * sample_rate, A4=A4
+        )
+        if not max_pitch:
+            max_pitch = max_possible_pitch
+        elif max_pitch > max_possible_pitch:
+            logger.warning(
+                "Provided max_pitch %.2f "
+                "exceeds the maximum possible pitch %.2f"
+                "for the given sample rate %.2f.",
+                max_pitch,
+                max_possible_pitch,
+                sample_rate,
+            )
+            max_pitch = max_possible_pitch
+
+        self.pitches = torch.linspace(
+            min_pitch, max_pitch, nb_pitches, dtype=torch.float32
+        ) # shape `(nb_pitches)`
+
+        self.phases = torch.linspace(
+            -1, 1 - 1 / nb_phases, nb_phases, dtype=torch.float32
+        )
+
+        
+        self.harmonic_distribution = torch.stack(
+            [timbre.gen_harmonics(self.pitches) for timbre in timbres]
+        )
+
+        
