@@ -173,27 +173,24 @@ class WaveformSynth:
             )
             .unsqueeze(0)
             .unsqueeze(0)
-            .repeat(params.size(2), 1)
+            .repeat(params.size(0), 1, 1)
         )
         # adding a dimension and repeating for each signal,
         # linspace shape `(n, 1, buffer_size)`
+        print(f'{linspace.shape=}')
 
         # Creating frequencies and phases matrices from params, shape(n, p, 1)
         frequencies = freq_from_pitch(
-            params[:, :, 1].unsqueeze(2), A4=self.A4
+            params[:, :, 0].unsqueeze(2), A4=self.A4
         )
+        phases = params[:, :, 1].unsqueeze(2)
+        powers = params[:, :, 2].unsqueeze(2)
+        print(f'{frequencies.shape=}, {phases.shape=}, {powers.shape=}')
+        
+        FT = torch.baddbmm(phases, frequencies, linspace)
+        print(f'{FT.shape}')
 
-        return (
-            params[2, None]  # power
-            * np.sin(
-                (
-                    linspace[:, None]
-                    @ freq_from_pitch(
-                        params[0, None],  # pitch
-                        A4=self.A4,
-                    )  # frequency
-                    + params[1, None]  # phase
-                )
-                * np.pi
-            )
-        ).sum(axis=1)  # summing all sines together
+        sines = powers * torch.sin(FT * np.pi)
+        print(f'{sines.shape=}')
+
+        return sines.sum(dim=1) # summing harmonics
