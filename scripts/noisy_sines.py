@@ -2,6 +2,7 @@ import numpy as np
 import torch
 import matplotlib.pyplot as plt
 
+from src.utils import freq_from_pitch
 from src.waveform import NoiseSynth, Noise, WaveformSynth
 
 
@@ -19,10 +20,14 @@ def run(*args, **kwargs):
         (Noise.pink(0.1), "pink 0.1"),
         (Noise.brown(0.2), "brown 0.2"),
         (Noise.blue(0.3), "blue 0.3"),
-        (Noise.violet(0.1) + Noise.brown(0.2), "violet 0.1 + brown 0.2"),
+        (
+            Noise.violet(0.1) + Noise.brown(0.2),
+            "violet 0.1 + brown 0.2",
+        ),
     ]
-
-    waveform = waveform_synth.gen_mono(torch.tensor([[69, 0]]))[0]
+    data = torch.tensor([[69, 0]], dtype=torch.float32)
+    data[:, 0] = freq_from_pitch(data[:, 0], A4=A4)
+    waveform = waveform_synth.gen_mono(data)[0]
 
     plt.figure()
     for idx, (synth, title) in enumerate(noises):

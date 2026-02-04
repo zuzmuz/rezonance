@@ -8,6 +8,7 @@ from torch.types import Number, Tensor
 
 
 from src.utils import (
+    freq_from_pitch,
     pitch_from_freq,
 )
 from src.waveform import WaveformSynth, NoiseSynth
@@ -94,6 +95,8 @@ class NoisySineWaveformDataset(Dataset):
             torch.zeros(self.noises.size(0)),
         )[:, 0:2]
 
+        self.data[:, 0] = freq_from_pitch(self.data[:, 0], A4=A4)
+
         self.data = self.synth.gen_mono(self.data)
 
         repeated_noises = self.noises.repeat(
@@ -179,6 +182,7 @@ class SineWaveformDataset(Dataset):
         # Combining pitches and phases into a 2D tensor
         # shape `(nb_pitches * nb_phases, 2)`
         self.data = torch.cartesian_prod(self.pitches, self.phases)
+        self.data[:, 0] = freq_from_pitch(self.data[:, 0], A4=A4)
 
         # Generating waveforms from pitches and phases
         # shape `(nb_pitches * nb_phases, buffer_size)`

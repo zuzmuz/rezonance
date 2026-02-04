@@ -13,11 +13,15 @@ def run(*args, **kwargs):
     
     waveform = waveform_synth.gen_poly(
         torch.tensor([
-            [[69, 0, 0.8], [57, 0, 0.4]]     
+            [[57, 0, 0.6], [69, 0.2, 0.3]],
+            [[57, 0, 0.6], [69, 0.2, 0.0]],
+            [[57, 0, 0.0], [69, 0.2, 0.3]]
         ])
     )
 
     plt.figure()
     plt.plot(waveform[0].cpu().detach().numpy(), linewidth=0.5)
+    plt.plot(waveform[1].cpu().detach().numpy(), linewidth=0.5)
+    plt.plot(waveform[2].cpu().detach().numpy(), linewidth=0.5)
     plt.show()
 

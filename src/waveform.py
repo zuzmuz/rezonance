@@ -119,8 +119,8 @@ class WaveformSynth:
             params (tensor): representing sinewave params, size `(n, 2)`
                 - n being the number of signals required.
                 - 2:
-                    - index 0 is pitch
-                    - index 1 is phase
+                    - The frequency.
+                    - The phase.
         Returns:
             Sine waves size `(n, buffer_size)`,
             not normalized, consider scaling with std
@@ -136,10 +136,7 @@ class WaveformSynth:
         )  # adding a dimension, linspace shape `(1, buffer_size)`
 
         # Creating frequencies and phases matrices from params, shape(n, 1)
-        frequencies = freq_from_pitch(
-            params[:, 0].unsqueeze(1),  # pitch
-            A4=self.A4,
-        )
+        frequencies = params[:, 0].unsqueeze(1)
         phases = params[:, 1].unsqueeze(1)
 
         return torch.sin((phases + frequencies @ linspace) * np.pi)
@@ -155,9 +152,9 @@ class WaveformSynth:
                 - n being the number of signals required.
                 - p the number of harmonics per signal.
                 - 3:
-                    - The first row is the pitch.
-                    - The second row is the phase.
-                    - The third row is the power.
+                    - The frequency.
+                    - The phase.
+                    - The power.
         Returns:
             A tensor containing all signals with the sum of all harmonics,
             of shape `(n, buffer_size)`,
@@ -177,20 +174,27 @@ class WaveformSynth:
         )
         # adding a dimension and repeating for each signal,
         # linspace shape `(n, 1, buffer_size)`
-        print(f'{linspace.shape=}')
 
         # Creating frequencies and phases matrices from params, shape(n, p, 1)
-        frequencies = freq_from_pitch(
-            params[:, :, 0].unsqueeze(2), A4=self.A4
-        )
+        frequencies = params[:, :, 0].unsqueeze(2)
         phases = params[:, :, 1].unsqueeze(2)
         powers = params[:, :, 2].unsqueeze(2)
-        print(f'{frequencies.shape=}, {phases.shape=}, {powers.shape=}')
-        
+
         FT = torch.baddbmm(phases, frequencies, linspace)
-        print(f'{FT.shape}')
 
         sines = powers * torch.sin(FT * np.pi)
-        print(f'{sines.shape=}')
 
-        return sines.sum(dim=1) # summing harmonics
+        return sines.sum(dim=1)  # summing harmonics
+
+
+class Timbre:
+    def __init__(
+        self,
+        sample_rate: Number,
+        distriution: Tensor
+    ):
+        self.sample_rate = sample_rate
+        self.distriution = distriution
+    
+    def gen_harmonics(self, pitch: Number) -> Tensor:
+        pass
