@@ -23,12 +23,12 @@ class NoisySineWaveformDataset(Dataset):
         /,
         noises: list[NoiseSynth],
         *,
-        sample_rate: Number,
-        buffer_size: int,
-        A4: Number,
-        seed: int | None = None,
+        sample_rate: Number = 16_000.0,
+        buffer_size: int = 1024,
+        A4: Number = 440.0,
         min_pitch: Number = 20,
         max_pitch: Number | None = None,
+        seed: int | None = None,
     ):
         if seed:
             torch.manual_seed(seed)
@@ -121,9 +121,9 @@ class SineWaveformDataset(Dataset):
         nb_phases: int,
         /,
         *,
-        sample_rate: Number,
-        buffer_size: int,
-        A4: Number,
+        sample_rate: Number = 16_000.0,
+        buffer_size: int = 1024,
+        A4: Number = 440.0,
         min_pitch: Number = 20,
         max_pitch: Number | None = None,
     ):
