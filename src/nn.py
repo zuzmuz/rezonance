@@ -16,6 +16,19 @@ logger = logging.getLogger(__name__)
 
 
 class NoisySineWaveformDataset(Dataset):
+    """
+    Synthetic dataset of sinewaveforms with varying pitch and phase, adding various noises.
+    Parameters:
+        nb_pitches (int): number of different pitches to generate, divides `min_pitch` to `max_pitch`
+        np_phases (int): number of different phases to generate, divides -1 to 1
+        noises (list[NoiseSynth]): list of noise synthesizers to add to the sinewaveforms
+        sample_rate (float): the sample rate of the generated waveform
+        buffer_size (int): the buffer size of the generated waveform
+        A4 (float): the reference frequency of the A4 note
+        min_pitch (float): the minimum pitch number (MIDI standard)
+        max_pitch (float | None): the maximum pitch number (MIDI standard).
+    """
+
     def __init__(
         self,
         nb_pitches: int,
@@ -73,13 +86,13 @@ class NoisySineWaveformDataset(Dataset):
         )
 
         # Combining pitches, phases, and noises into a 2D tensor
-        # shape `(2, nb_pitches * nb_phases * nb_noises)`
+        # shape `(nb_pitches * nb_phases * nb_noises, 2)`
         # drop noise dimension
         self.data = torch.cartesian_prod(
             self.pitches,
             self.phases,
             torch.zeros(self.noises.size(0)),
-        ).T[0:2]
+        )[:, 0:2]
 
         self.data = self.synth.gen_mono(self.data)
 
@@ -164,8 +177,8 @@ class SineWaveformDataset(Dataset):
         )
 
         # Combining pitches and phases into a 2D tensor
-        # shape `(2, nb_pitches * nb_phases)`
-        self.data = torch.cartesian_prod(self.pitches, self.phases).T
+        # shape `(nb_pitches * nb_phases, 2)`
+        self.data = torch.cartesian_prod(self.pitches, self.phases)
 
         # Generating waveforms from pitches and phases
         # shape `(nb_pitches * nb_phases, buffer_size)`

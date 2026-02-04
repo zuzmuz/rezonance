@@ -116,27 +116,30 @@ class WaveformSynth:
         """
         Generate monophonic sinusoidal waveform,
         Parameters:
-            params (tensor): representing sinewave params, size `2 * n`
+            params (tensor): representing sinewave params, size `n * 2`
                 n being the number of signals required.
                 - index 0 is pitch
                 - index 1 is phase
         Returns:
             Sine waves size `n * buffer_size`, not normalized, consider scaling with std
         """
+
+        # Generating the linspace for the waveform, this will represent time
         linspace = torch.linspace(
             0,
             self.buffer_size / self.sample_rate,
             self.buffer_size,
-        ).unsqueeze(0)
+        ).unsqueeze(0) # adding a dimension, linspace shape `(buffer_size * 1)`
+
 
         return torch.sin(
             (
                 freq_from_pitch(
-                    params[0, None].T,  # pitch
+                    params[:, 0, None],  # pitch
                     A4=self.A4,
                 )  # frequency
-                @ linspace
-                + params[1, None].T  # phase
+                @ linspace # time
+                + params[:, 1, None]  # phase
             )
             * np.pi
         )
@@ -156,11 +159,14 @@ class WaveformSynth:
         Returns:
             The sum of all sinewaves, the result is not scaled or normalized, consider dividing by std
         """
+
+        # Generating the linspace for the waveform, this will represent time
         linspace = torch.linspace(
             0,
             self.buffer_size / self.sample_rate,
             self.buffer_size,
-        )
+        ).unsqueeze(0).unsqueeze(0).repeat(params.size(2), 1)
+        # adding a dimension and repeating for each signal, linspace shape `(n * buffer_size)`
 
         return (
             params[2, None]  # power
