@@ -116,12 +116,14 @@ class WaveformSynth:
         """
         Generate monophonic sinusoidal waveform,
         Parameters:
-            params (tensor): representing sinewave params, size `n * 2`
-                n being the number of signals required.
-                - index 0 is pitch
-                - index 1 is phase
+            params (tensor): representing sinewave params, size `(n, 2)`
+                - n being the number of signals required.
+                - 2:
+                    - index 0 is pitch
+                    - index 1 is phase
         Returns:
-            Sine waves size `n * buffer_size`, not normalized, consider scaling with std
+            Sine waves size `(n, buffer_size)`,
+            not normalized, consider scaling with std
         """
 
         # Generating the linspace for the waveform, this will represent time
@@ -129,20 +131,18 @@ class WaveformSynth:
             0,
             self.buffer_size / self.sample_rate,
             self.buffer_size,
-        ).unsqueeze(0) # adding a dimension, linspace shape `(buffer_size * 1)`
+        ).unsqueeze(
+            0
+        )  # adding a dimension, linspace shape `(1, buffer_size)`
 
-
-        return torch.sin(
-            (
-                freq_from_pitch(
-                    params[:, 0, None],  # pitch
-                    A4=self.A4,
-                )  # frequency
-                @ linspace # time
-                + params[:, 1, None]  # phase
-            )
-            * np.pi
+        # Creating frequencies and phases matrices from params, shape(n, 1)
+        frequencies = freq_from_pitch(
+            params[:, 0].unsqueeze(1),  # pitch
+            A4=self.A4,
         )
+        phases = params[:, 1].unsqueeze(1)
+
+        return torch.sin((phases + frequencies @ linspace) * np.pi)
 
     def gen_poly(
         self,
@@ -151,22 +151,37 @@ class WaveformSynth:
         """
         Generating polyphonic waveform as sum of sinewaves from a distriution of parameters.
         Parameters:
-            params (tensor): representing sinewaves params, size `3 * p * n`
-                n being the number of signals required.
-                - The first row is the pitch.
-                - The second row is the phase.
-                - The third row is the power.
+            params (tensor): representing sinewaves params, size `(n, p, 3)`
+                - n being the number of signals required.
+                - p the number of harmonics per signal.
+                - 3:
+                    - The first row is the pitch.
+                    - The second row is the phase.
+                    - The third row is the power.
         Returns:
-            The sum of all sinewaves, the result is not scaled or normalized, consider dividing by std
+            A tensor containing all signals with the sum of all harmonics,
+            of shape `(n, buffer_size)`,
+            the result is not scaled or normalized, consider dividing by std
         """
 
         # Generating the linspace for the waveform, this will represent time
-        linspace = torch.linspace(
-            0,
-            self.buffer_size / self.sample_rate,
-            self.buffer_size,
-        ).unsqueeze(0).unsqueeze(0).repeat(params.size(2), 1)
-        # adding a dimension and repeating for each signal, linspace shape `(n * buffer_size)`
+        linspace = (
+            torch.linspace(
+                0,
+                self.buffer_size / self.sample_rate,
+                self.buffer_size,
+            )
+            .unsqueeze(0)
+            .unsqueeze(0)
+            .repeat(params.size(2), 1)
+        )
+        # adding a dimension and repeating for each signal,
+        # linspace shape `(n, 1, buffer_size)`
+
+        # Creating frequencies and phases matrices from params, shape(n, p, 1)
+        frequencies = freq_from_pitch(
+            params[:, :, 1].unsqueeze(2), A4=self.A4
+        )
 
         return (
             params[2, None]  # power
