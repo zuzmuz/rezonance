@@ -69,7 +69,7 @@ class NoisySineWaveformDataset(Dataset):
         )
 
         self.phases = torch.linspace(
-            -1, 1, nb_phases, dtype=torch.float32
+            -1, 1 - 2 / nb_phases, nb_phases, dtype=torch.float32
         )
 
         # Combining pitches, phases, and noises into a 2D tensor
@@ -160,7 +160,7 @@ class SineWaveformDataset(Dataset):
             dtype=torch.float32,
         )
         self.phases = torch.linspace(
-            -1, 1, nb_phases, dtype=torch.float32
+            -1, 1 - 2 / nb_phases, nb_phases, dtype=torch.float32
         )
 
         # Combining pitches and phases into a 2D tensor
