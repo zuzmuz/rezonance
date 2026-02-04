@@ -188,13 +188,34 @@ class WaveformSynth:
 
 
 class Timbre:
+    """
+    A timbre class for generating harmonic distributions from pitch
+    Parameters:
+        distriution (tensor): the harmonic distribution tensor, shape `(n, 3)`,
+            - n, number of harmonics
+            - 3:
+                - the frequency multiplier
+                - the phase
+                - the power
+    KewordArguments:
+        sample_rate (float): the sample rate of the generated waveform, required to limit frequencies generated to the Shannon frequency
+        A4 (float): the reference frequency of the A4 note
+    """
     def __init__(
         self,
+        distriution: Tensor,
+        *,
         sample_rate: Number,
-        distriution: Tensor
+        A4: Number = 440,
     ):
         self.sample_rate = sample_rate
         self.distriution = distriution
+        self.A4 = A4
     
-    def gen_harmonics(self, pitch: Number) -> Tensor:
-        pass
+    def gen_harmonics(self, pitch: Tensor) -> Tensor:
+        frequency = freq_from_pitch(pitch, A4=self.A4)
+
+        harmonics = self.distriution.clone()
+        harmonics[:, 0] = frequency * harmonics[:, 0]
+
+        return harmonics
