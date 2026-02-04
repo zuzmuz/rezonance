@@ -24,7 +24,7 @@ def pitch_from_freq(
     frequency: Number,
     *,
     A4: Number,
-) -> Tensor:
+) -> Number:
     """
     Generate a MIDI pitch number from a frequency in Hz.
     0 is C-1 (8.1758 Hz), 69 is A4 (440 Hz)

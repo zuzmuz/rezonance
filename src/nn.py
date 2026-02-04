@@ -1,15 +1,18 @@
 import time
+import logging
 import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import Dataset, DataLoader
 from torch.types import Number, Tensor
-import numpy as np
+
 
 from src.utils import (
     pitch_from_freq,
 )
 from src.waveform import WaveformSynth, NoiseSynth
+
+logger = logging.getLogger(__name__)
 
 
 class NoisySineWaveformDataset(Dataset):
@@ -24,6 +27,8 @@ class NoisySineWaveformDataset(Dataset):
         buffer_size: int,
         A4: Number,
         seed: int | None = None,
+        min_pitch: Number = 20,
+        max_pitch: Number | None = None,
     ):
         if seed:
             torch.manual_seed(seed)
@@ -43,10 +48,24 @@ class NoisySineWaveformDataset(Dataset):
         # max pitch is necessary to prevent aliasing
         # adding sines with frequencies close and higher than Shannon frequency
         # will add lower frequencies which are undesired
-        max_pitch = pitch_from_freq(0.25 * sample_rate, A4=A4)
+        max_possible_pitch = pitch_from_freq(
+            0.25 * sample_rate, A4=A4
+        )
+        if not max_pitch:
+            max_pitch = max_possible_pitch
+        elif max_pitch > max_possible_pitch:
+            logger.warning(
+                "Provided max_pitch %.2f "
+                "exceeds the maximum possible pitch %.2f"
+                "for the given sample rate %.2f.",
+                max_pitch,
+                max_possible_pitch,
+                sample_rate,
+            )
+            max_pitch = max_possible_pitch
 
         self.pitches = torch.linspace(
-            20, max_pitch, nb_pitches, dtype=torch.float32
+            min_pitch, max_pitch, nb_pitches, dtype=torch.float32
         )
 
         self.phases = torch.linspace(
@@ -84,6 +103,18 @@ class NoisySineWaveformDataset(Dataset):
 
 
 class SineWaveformDataset(Dataset):
+    """
+    Simple synthetic dataset of sinewaveforms with varying pitch and phase.
+    Parameters:
+        nb_pitches (int): number of different pitches to generate, divides `min_pitch` to `max_pitch`
+        np_phases (int): number of different phases to generate, divides -1 to 1
+        sample_rate (float): the sample rate of the generated waveform
+        buffer_size (int): the buffer size of the generated waveform
+        A4 (float): the reference frequency of the A4 note
+        min_pitch (float): the minimum pitch number (MIDI standard)
+        max_pitch (float | None): the maximum pitch number (MIDI standard).
+    """
+
     def __init__(
         self,
         nb_pitches: int,
@@ -93,6 +124,8 @@ class SineWaveformDataset(Dataset):
         sample_rate: Number,
         buffer_size: int,
         A4: Number,
+        min_pitch: Number = 20,
+        max_pitch: Number | None = None,
     ):
         self.synth = WaveformSynth(
             sample_rate=sample_rate,
@@ -100,13 +133,28 @@ class SineWaveformDataset(Dataset):
             A4=A4,
         )
 
+        max_possible_pitch = pitch_from_freq(
+            0.25 * sample_rate, A4=A4
+        )
+        if not max_pitch:
+            max_pitch = max_possible_pitch
+        elif max_pitch > max_possible_pitch:
+            logger.warning(
+                "Provided max_pitch %.2f "
+                "exceeds the maximum possible pitch %.2f"
+                "for the given sample rate %.2f.",
+                max_pitch,
+                max_possible_pitch,
+                sample_rate,
+            )
+            max_pitch = max_possible_pitch
+
         # max pitch is necessary to prevent aliasing
         # adding sines with frequencies close and higher than Shannon frequency
         # will add lower frequencies which are undesired
-        max_pitch = pitch_from_freq(0.25 * sample_rate, A4=A4)
 
         self.pitches = torch.linspace(
-            20,
+            min_pitch,
             max_pitch,
             nb_pitches,
             dtype=torch.float32,
