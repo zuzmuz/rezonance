@@ -253,8 +253,11 @@ class TimbralWaveformDataset(Dataset):
         harmonic_distribution = torch.stack(
             [timbre.gen_harmonics(self.pitches) for timbre in timbres]
         ) # `(nb_timbres, nb_pitches, nb_harmonics, 3)`
+        nb_timbres, nb_pitches, nb_harmonics, _ = harmonic_distribution.shape
+        print(f'{nb_timbres=}, {nb_pitches=}, {nb_harmonics=}')
+        print(f'harmonic distribution: {harmonic_distribution}')
 
-        print(f'shape of harmonic distribution: {harmonic_distribution.shape}')
+        # TODO: cleanup frequencies above Shannon frequency
 
         # # self.data = self.harmonic_distribution.repeat()
         # self.data = harmonic_distribution
