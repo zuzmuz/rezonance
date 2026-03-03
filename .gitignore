@@ -45,3 +45,5 @@ coverage.xml
 .vscode/
 *.swp
 *.swo
+
+docs/

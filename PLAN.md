@@ -11,7 +11,7 @@
         - [ ] pitches (min, max, num)
         - [ ] harmonic dist
             - [ ] frequ
-
+- [ ] some ideas can be expressed as data augmentation (like noise)
 # Training
 
 - [ ] normal linear model
