@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-from src.waveform import Noise, NoiseSynth
+from src.noise_generators import Noise, NoiseSynth
 
 
 def run(*args, **kwargs):
@@ -15,7 +15,11 @@ def run(*args, **kwargs):
         ("brown", "brown", Noise.brown(1.0)),
         ("blue", "blue", Noise.blue(1.0)),
         ("violet", "violet", Noise.violet(1.0)),
-        ("brown + violet", "green", Noise.brown(1.4) + Noise.violet(0.3))
+        (
+            "brown + violet",
+            "green",
+            Noise.brown(1.4) + Noise.violet(0.3),
+        ),
     ]
 
     noises_len = len(noises)

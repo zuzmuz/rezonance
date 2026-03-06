@@ -6,7 +6,7 @@ from src.utils import (
     freq_from_pitch,
     pitch_from_freq,
 )
-from src.waveform import Timbre, WaveformSynth, NoiseSynth
+from src.waveform import Timbre, WaveformSynth
 
 
 logger = logging.getLogger(__name__)
@@ -203,7 +203,6 @@ class TimbralWaveformDataset(Dataset):
         nb_pitches: int,
         /,
         timbres: list[Timbre],
-        # noises: list[NoiseSynth],
         *,
         sample_rate: Number = 16_000.0,
         buffer_size: int = 1024,
@@ -257,7 +256,8 @@ class TimbralWaveformDataset(Dataset):
         print(f'{nb_timbres=}, {nb_pitches=}, {nb_harmonics=}')
         print(f'harmonic distribution: {harmonic_distribution}')
 
-        # TODO: cleanup frequencies above Shannon frequency
+        # TODO: cleanup frequencies above Shannon frequenc120
+
 
         # # self.data = self.harmonic_distribution.repeat()
         # self.data = harmonic_distribution

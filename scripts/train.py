@@ -9,7 +9,8 @@ from src.nn import (
     LinearModel1,
     Trainer,
 )
-from src.waveform import WaveformSynth, Noise
+from src.waveform import WaveformSynth
+from src.noise_generators import Noise
 
 
 def run(*args, verbose: bool = False, **kwargs):

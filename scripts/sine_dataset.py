@@ -20,7 +20,7 @@ def run(*args, **kwargs):
 
     plt.figure()
 
-    for idx, element in enumerate(dataset): # type: ignore
+    for idx, element in enumerate(dataset):  # type: ignore
         plt.subplot(5, 3, idx + 1)
         plt.plot(element[0].cpu().detach().numpy(), linewidth=0.5)
 

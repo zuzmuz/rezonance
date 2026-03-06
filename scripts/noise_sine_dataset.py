@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 
-from src.waveform import Noise
+from src.noise_generators import Noise
 from src.dataset import NoisySineWaveformDataset
 
 def run(*args, **kwargs):

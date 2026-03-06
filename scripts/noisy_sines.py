@@ -1,9 +1,9 @@
-import numpy as np
 import torch
 import matplotlib.pyplot as plt
 
 from src.utils import freq_from_pitch
-from src.waveform import NoiseSynth, Noise, WaveformSynth
+from src.noise_generators import NoiseSynth, Noise
+from src.waveform import WaveformSynth
 
 
 def run(*args, **kwargs):

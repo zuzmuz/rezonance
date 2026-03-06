@@ -3,11 +3,11 @@ from torch.types import Tensor, Number
 from typing import Callable
 
 
-
 class NoiseSynth:
     """
     A callable synth that generates noise based on a filter
     """
+
     def __init__(
         self,
         power: Number,
@@ -46,6 +46,7 @@ class CompositeNoiseSynth(NoiseSynth):
     """
     A utility to combine multiple noise synths together
     """
+
     def __init__(self, synths: list[NoiseSynth]):
         self.synths = synths
 
@@ -70,7 +71,7 @@ class Noise:
             power (Number): the amplitude of the noise
         Returns:
             A noise synth that will generate a brown noise when called
-        
+
         """
         return NoiseSynth(
             power=power,
@@ -87,12 +88,13 @@ class Noise:
             power (Number): the amplitude of the noise
         Returns:
             A noise synth that will generate a pink noise when called
-        
+
         """
         return NoiseSynth(
             power=power,
-            filter=lambda freq: 1
-            / torch.where(freq == 0, 1, torch.sqrt(freq)),
+            filter=lambda freq: (
+                1 / torch.where(freq == 0, 1, torch.sqrt(freq))
+            ),
         )
 
     class white(NoiseSynth):
@@ -104,8 +106,9 @@ class Noise:
             power (Number): the amplitude of the noise
         Returns:
             A noise synth that will generate a white noise when called
-        
+
         """
+
         def __init__(self, power: Number):
             self.power = power
 
@@ -117,12 +120,12 @@ class Noise:
         """
         Returns a blue (high frequency) noise
 
-        The filter shape of the brown noise takes the form of √freq 
+        The filter shape of the brown noise takes the form of √freq
         Parameters:
             power (Number): the amplitude of the noise
         Returns:
             A noise synth that will generate a blue noise when called
-        
+
         """
         return NoiseSynth(
             power=power, filter=lambda freq: torch.sqrt(freq)
@@ -138,6 +141,6 @@ class Noise:
             power (Number): the amplitude of the noise
         Returns:
             A noise synth that will generate a violet noise when called
-        
+
         """
         return NoiseSynth(power=power, filter=lambda freq: freq)
