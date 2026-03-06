@@ -1,4 +1,5 @@
 import torch
+import numpy as np
 import matplotlib.pyplot as plt
 
 from src.waveform import Timbre
@@ -11,7 +12,7 @@ def run(*args, **kwargs):
     A4 = 440.0
 
     dataset = TimbralWaveformDataset(
-        2,
+        3,
         timbres=[
             Timbre(
                 torch.tensor(
@@ -31,16 +32,16 @@ def run(*args, **kwargs):
         buffer_size=buffer_size,
         A4=A4,
         min_pitch=60,
-        max_pitch=120,
+        max_pitch=140,
     )
 
-    plt.figure()
-
-    len_ = len(dataset)
-    lines = len_ / 3
-
-    for idx, element in enumerate(dataset):  # type: ignore
-        plt.subplot(lines, 3, idx + 1)
-        plt.plot(element[0].cpu().detach().numpy())
+    # plt.figure()
+    #
+    # len_ = len(dataset)
+    # lines = len_ / 3
+    #
+    # for idx, element in enumerate(dataset):  # type: ignore
+    #     plt.subplot(lines, 3, idx + 1)
+    #     plt.plot(element[0].cpu().detach().numpy())
 
     plt.show()
