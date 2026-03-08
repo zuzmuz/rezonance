@@ -1,4 +1,5 @@
 import logging
+from numpy import size
 import torch
 from torch.types import Number, Tensor
 from torch.utils.data import Dataset
@@ -158,6 +159,8 @@ class LazyNoisySineWaveformDataset(Dataset):
             min_pitch, max_pitch, nb_pitches, dtype=torch.float32
         )
 
+        self.freqencies = freq_from_pitch(self.pitches, A4=A4)
+
         self.phases = torch.linspace(
             -1, 2 - 1 / nb_phases, nb_phases, dtype=torch.float32
         )
@@ -176,7 +179,10 @@ class LazyNoisySineWaveformDataset(Dataset):
 
     def __getitem__(self, idx):
         pitch = self.pitches[
-            idx // (self.phases.size(0) * len(self.noises))
+            idx // (self.phases.size(0) * self.noises.size(0))
+        ]
+        freq = self.freqencies[
+            idx // (self.phases.size(0) * self.noises.size(0))
         ]
         phase = self.phases[
             (idx // self.noises.size(0)) % self.phases.size(0)
@@ -186,10 +192,10 @@ class LazyNoisySineWaveformDataset(Dataset):
         ]
 
         waveform = self.synth.gen_mono(
-            torch.tensor([pitch, phase]).unsqueeze(0)
+            torch.tensor([freq, phase]).unsqueeze(0)
         )
 
-        return waveform + noise
+        return waveform[0] + noise, pitch
 
 
 
