@@ -92,7 +92,7 @@ class NoisySineWaveformDataset(Dataset):
         )[:, 0:2]
 
         self.data[:, 0] = freq_from_pitch(self.data[:, 0], A4=A4)
-        
+
         self.data = self.synth.gen_mono(self.data)
         # shape `(nb_pitches * nb_phases * nb_noises, buffer_size)`
 
@@ -113,6 +113,85 @@ class NoisySineWaveformDataset(Dataset):
         ]
         waveform = self.data[idx]
         return waveform, pitch
+
+
+class LazyNoisySineWaveformDataset(Dataset):
+    def __init__(
+        self,
+        nb_pitches: int,
+        nb_phases: int,
+        /,
+        noises: list[NoiseSynth],
+        *,
+        sample_rate: Number = 16_000.0,
+        buffer_size: int = 1024,
+        A4: Number = 440.0,
+        min_pitch: Number = 20,
+        max_pitch: Number | None = None,
+        seed: int | None = None,
+    ):
+
+        if seed:
+            torch.manual_seed(seed)
+
+        self.synth = WaveformSynth(
+            sample_rate=sample_rate, buffer_size=buffer_size, A4=A4
+        )
+
+        max_possible_pitch = pitch_from_freq(
+            0.25 * sample_rate, A4=A4
+        )
+
+        if not max_pitch:
+            max_pitch = max_possible_pitch
+        elif max_possible_pitch > max_possible_pitch:
+            logger.warning(
+                "Provided max_pitch %.2f "
+                "exceeds the maximum possible pitch %.2f"
+                "for the given sample rate %.2f.",
+                max_pitch,
+                max_possible_pitch,
+                sample_rate,
+            )
+
+        self.pitches = torch.linspace(
+            min_pitch, max_pitch, nb_pitches, dtype=torch.float32
+        )
+
+        self.phases = torch.linspace(
+            -1, 2 - 1 / nb_phases, nb_phases, dtype=torch.float32
+        )
+
+        self.noises = torch.stack(
+            [synth(buffer_size) for synth in noises]
+        )
+
+
+    def __len__(self):
+        return (
+            self.pitches.size(0)
+            * self.pitches.size(0)
+            * self.noises.size(0)
+        )
+
+    def __getitem__(self, idx):
+        pitch = self.pitches[
+            idx // (self.phases.size(0) * len(self.noises))
+        ]
+        phase = self.phases[
+            (idx // self.noises.size(0)) % self.phases.size(0)
+        ]
+        noise = self.noises[
+            idx % self.noises.size(0)
+        ]
+
+        waveform = self.synth.gen_mono(
+            torch.tensor([pitch, phase]).unsqueeze(0)
+        )
+
+        return waveform + noise
+
+
 
 
 class SineWaveformDataset(Dataset):
@@ -251,13 +330,13 @@ class TimbralWaveformDataset(Dataset):
 
         harmonic_distribution = torch.stack(
             [timbre.gen_harmonics(self.pitches) for timbre in timbres]
-        ) # `(nb_timbres, nb_pitches, nb_harmonics, 3)`
-        nb_timbres, nb_pitches, nb_harmonics, _ = harmonic_distribution.shape
-        print(f'{nb_timbres=}, {nb_pitches=}, {nb_harmonics=}')
-        print(f'harmonic distribution: {harmonic_distribution}')
-        harmonic
+        )  # `(nb_timbres, nb_pitches, nb_harmonics, 3)`
+        nb_timbres, nb_pitches, nb_harmonics, _ = (
+            harmonic_distribution.shape
+        )
+        print(f"{nb_timbres=}, {nb_pitches=}, {nb_harmonics=}")
+        print(f"harmonic distribution: {harmonic_distribution}")
         # TODO: cleanup frequencies above Shannon frequenc120
-
 
         # # self.data = self.harmonic_distribution.repeat()
         # self.data = harmonic_distribution
@@ -265,13 +344,10 @@ class TimbralWaveformDataset(Dataset):
         # self.data = self.synth.gen_poly(
         # )
         self.data = torch.tensor([])
+
     def __len__(self):
         return self.data.size(0)
 
     def __getitem__(self, idx):
-        # pitch = self.pitches[
-        #     idx // (self.phases.size(0) * self.noises.size(0))
-        # ]
-        # waveform = self.data[idx]
-        return self.data[0], 0
 
+        return self.data[0], 0
