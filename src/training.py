@@ -2,11 +2,11 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import Dataset, DataLoader
+from src.utils import current_device
 
-
-class MonophonicModel(nn.Module):
+class FCModel(nn.Module):
     def __init__(self, buffer_size: int):
-        super(MonophonicModel, self).__init__()
+        super(FCModel, self).__init__()
 
         self.model = nn.Sequential(
             nn.Linear(buffer_size, 512),
@@ -15,13 +15,17 @@ class MonophonicModel(nn.Module):
             nn.Tanh(),
             nn.Linear(512, 256),
             nn.Tanh(),
+            nn.Linear(256, 256),
+            nn.Tanh(),
             nn.Linear(256, 128),
+            nn.Tanh(),
+            nn.Linear(128, 128),
             nn.Tanh(),
             nn.Linear(128, 1),
         )
 
     def forward(self, X):
-        return self.model(X)
+        return self.model(X).squeeze(1)
 
 
 class Trainer:
@@ -31,7 +35,12 @@ class Trainer:
         self.optimizer = optim.Adam(self.model.parameters(), lr=0.001)
 
     def train(self, nb_epoch: int, dataset: Dataset):
-        data_loader = DataLoader(dataset, batch_size=32, shuffle=True)
+        data_loader = DataLoader(
+            dataset,
+            batch_size=512,
+            shuffle=True,
+            generator=torch.Generator(current_device),
+        )
         history = []
         for epoch in range(nb_epoch):
             self.model.train()
@@ -39,6 +48,7 @@ class Trainer:
             for batch_X, batch_y in data_loader:
                 self.optimizer.zero_grad()
                 hat_y = self.model.forward(batch_X)
+                # print(f"{batch_X.shape=} {batch_y.shape=} {hat_y.shape=}")
                 loss = self.criterion(hat_y, batch_y)
                 loss.backward()
                 self.optimizer.step()

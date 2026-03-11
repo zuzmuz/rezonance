@@ -3,6 +3,9 @@ import torch
 from torch.types import Number, Tensor
 
 
+# current_device = "mps"
+current_device = "cpu"
+
 def freq_from_pitch(
     pitch: Tensor,
     *,
@@ -18,6 +21,7 @@ def freq_from_pitch(
         The frequency in Hz, same shape as the input pitch
     """
     return torch.pow(2, (pitch - 69) / 12) * A4
+
 
 
 def pitch_from_freq(
@@ -50,3 +54,24 @@ def gen_wav_from_spectrum(
     """
     audio = torch.fft.irfft(spectrum)
     return audio
+
+def get_pitch_rank(
+    pitch: Tensor,
+    *,
+    sample_rate: Number,
+    A4: Number,
+) -> Tensor:
+    """
+    Calculate the possible number of harmonics of a given pitch, taking into account the Shanon frequency
+    Parameters:
+        pitch (tensor): The pitches to calculate rank for
+        sample_rate (Number): The sampling rate
+        A4 (Number): The reference frequency for A4 in Hz
+    Returns:
+        The pitch ranks, same shape as the input pitches
+    """
+
+
+    freq = freq_from_pitch(pitch, A4=A4)
+    return (sample_rate / (2*freq)).round()
+

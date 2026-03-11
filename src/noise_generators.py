@@ -1,6 +1,7 @@
 import torch
 from torch.types import Tensor, Number
 from typing import Callable
+from src.utils import current_device
 
 
 class NoiseSynth:
@@ -36,6 +37,7 @@ class NoiseSynth:
         return torch.normal(
             mean=torch.zeros(buffer_size),
             std=1.0,
+            generator=torch.Generator(device=current_device)
         )
 
     def __add__(self, other: NoiseSynth) -> NoiseSynth:

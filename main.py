@@ -3,10 +3,12 @@ import matplotlib.pyplot as plt
 import importlib
 import pkgutil
 from argparse import ArgumentParser
+from src.utils import current_device
 
 
 def main():
-    torch.set_default_device("cpu")
+    # torch.set_default_device("cpu")
+    torch.set_default_device(current_device)
 
     print("Using device:", torch.get_default_device())
 

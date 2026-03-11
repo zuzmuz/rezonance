@@ -3,10 +3,7 @@ from numpy import size
 import torch
 from torch.types import Number, Tensor
 from torch.utils.data import Dataset
-from src.utils import (
-    freq_from_pitch,
-    pitch_from_freq,
-)
+from src.utils import freq_from_pitch, pitch_from_freq, current_device
 from src.waveform import Timbre, WaveformSynth
 from src.noise_generators import NoiseSynth
 
@@ -105,6 +102,8 @@ class NoisySineWaveformDataset(Dataset):
 
         self.data /= self.data.std(dim=1, keepdim=True)
 
+        self.data.to(current_device)
+
     def __len__(self):
         return self.data.size(0)
 
@@ -113,6 +112,7 @@ class NoisySineWaveformDataset(Dataset):
             idx // (self.phases.size(0) * self.noises.size(0))
         ]
         waveform = self.data[idx]
+
         return waveform, pitch
 
 
@@ -145,7 +145,7 @@ class LazyNoisySineWaveformDataset(Dataset):
 
         if not max_pitch:
             max_pitch = max_possible_pitch
-        elif max_possible_pitch > max_possible_pitch:
+        elif max_pitch > max_possible_pitch:
             logger.warning(
                 "Provided max_pitch %.2f "
                 "exceeds the maximum possible pitch %.2f"
@@ -169,11 +169,14 @@ class LazyNoisySineWaveformDataset(Dataset):
             [synth(buffer_size) for synth in noises]
         )
 
+        print(
+            f"{self.pitches.shape=} {self.phases.shape=} {self.noises.shape=}"
+        )
 
     def __len__(self):
         return (
             self.pitches.size(0)
-            * self.pitches.size(0)
+            * self.phases.size(0)
             * self.noises.size(0)
         )
 
@@ -187,139 +190,50 @@ class LazyNoisySineWaveformDataset(Dataset):
         phase = self.phases[
             (idx // self.noises.size(0)) % self.phases.size(0)
         ]
-        noise = self.noises[
-            idx % self.noises.size(0)
-        ]
+        noise = self.noises[idx % self.noises.size(0)]
 
         waveform = self.synth.gen_mono(
             torch.tensor([freq, phase]).unsqueeze(0)
         )
 
+        # print(f"sizes {waveform[0].shape}  pi {pitch.shape}")
+
         return waveform[0] + noise, pitch
 
 
-
-
-class SineWaveformDataset(Dataset):
-    """
-    Simple synthetic dataset of sinewaveforms with varying pitch and phase.
-    Parameters:
-        nb_pitches (int): number of different pitches to generate, divides `min_pitch` to `max_pitch`
-        np_phases (int): number of different phases to generate, divides -1 to 1
-        sample_rate (float): the sample rate of the generated waveform
-        buffer_size (int): the buffer size of the generated waveform
-        A4 (float): the reference frequency of the A4 note
-        min_pitch (float): the minimum pitch number (MIDI standard)
-        max_pitch (float | None): the maximum pitch number (MIDI standard).
-    """
-
+class RandomTimbralDataSet(Dataset):
     def __init__(
         self,
         nb_pitches: int,
-        nb_phases: int,
-        /,
+        nb_harm_dist: int,
+        nb_noises: int,
         *,
-        sample_rate: Number = 16_000.0,
-        buffer_size: int = 1024,
-        A4: Number = 440.0,
-        min_pitch: Number = 20,
-        max_pitch: Number | None = None,
-    ):
-        self.synth = WaveformSynth(
-            sample_rate=sample_rate,
-            buffer_size=buffer_size,
-            A4=A4,
-        )
-
-        max_possible_pitch = pitch_from_freq(
-            0.25 * sample_rate, A4=A4
-        )
-        if not max_pitch:
-            max_pitch = max_possible_pitch
-        elif max_pitch > max_possible_pitch:
-            logger.warning(
-                "Provided max_pitch %.2f "
-                "exceeds the maximum possible pitch %.2f"
-                "for the given sample rate %.2f.",
-                max_pitch,
-                max_possible_pitch,
-                sample_rate,
-            )
-            max_pitch = max_possible_pitch
-
-        # max pitch is necessary to prevent aliasing
-        # adding sines with frequencies close and higher than Shannon frequency
-        # will add lower frequencies which are undesired
-
-        self.pitches = torch.linspace(
-            min_pitch,
-            max_pitch,
-            nb_pitches,
-            dtype=torch.float32,
-        )
-        self.phases = torch.linspace(
-            -1, 1 - 1 / nb_phases, nb_phases, dtype=torch.float32
-        )
-
-        # Combining pitches and phases into a 2D tensor
-        # shape `(nb_pitches * nb_phases, 2)`
-        self.data = torch.cartesian_prod(self.pitches, self.phases)
-        self.data[:, 0] = freq_from_pitch(self.data[:, 0], A4=A4)
-
-        # Generating waveforms from pitches and phases
-        # shape `(nb_pitches * nb_phases, buffer_size)`
-        self.data = self.synth.gen_mono(self.data)
-
-        # Standardizing waveforms
-        self.data /= self.data.std(dim=1, keepdim=True)
-
-    def __len__(self):
-        return self.data.size(0)
-
-    def __getitem__(self, idx) -> tuple[Tensor, Tensor]:
-        pitch = self.pitches[idx // self.phases.size(0)]
-        waveform = self.data[idx]
-        return waveform, pitch
-
-
-class TimbralWaveformDataset(Dataset):
-    def __init__(
-        self,
-        nb_pitches: int,
-        /,
-        timbres: list[Timbre],
-        *,
-        sample_rate: Number = 16_000.0,
+        sample_rate: Number = 16_000,
         buffer_size: int = 1024,
         A4: Number = 440.0,
         min_pitch: Number = 20,
         max_pitch: Number | None = None,
         seed: int | None = None,
     ):
+
         if seed:
             torch.manual_seed(seed)
 
+        self.sample_rate = sample_rate
+        self.A4 = A4
+
         self.synth = WaveformSynth(
-            sample_rate=sample_rate,
-            buffer_size=buffer_size,
-            A4=A4,
+            sample_rate=sample_rate, buffer_size=buffer_size, A4=A4
         )
 
-        # Creating all noises
-        # shape `(nb_noises, buffer_size)`
-        # self.noises = torch.stack(
-        #     [synth(buffer_size) for synth in noises]
-        # )
-
-        # max pitch is necessary to prevent aliasing
-        # adding sines with frequencies close and higher than Shannon frequency
-        # will add lower frequencies which are undesired
+        # [1/10, 1/8[ [1/8, 1/6[ [1/6, 1/4[ [1/4, 1/2[
         max_possible_pitch = pitch_from_freq(
             0.25 * sample_rate, A4=A4
         )
+
         if not max_pitch:
             max_pitch = max_possible_pitch
-        elif max_pitch > max_possible_pitch:
+        elif max_pitch < max_possible_pitch:
             logger.warning(
                 "Provided max_pitch %.2f "
                 "exceeds the maximum possible pitch %.2f"
@@ -328,32 +242,6 @@ class TimbralWaveformDataset(Dataset):
                 max_possible_pitch,
                 sample_rate,
             )
-            max_pitch = max_possible_pitch
 
-        self.pitches = torch.linspace(
-            min_pitch, max_pitch, nb_pitches, dtype=torch.float32
-        )  # shape `(nb_pitches)`
-
-        harmonic_distribution = torch.stack(
-            [timbre.gen_harmonics(self.pitches) for timbre in timbres]
-        )  # `(nb_timbres, nb_pitches, nb_harmonics, 3)`
-        nb_timbres, nb_pitches, nb_harmonics, _ = (
-            harmonic_distribution.shape
-        )
-        print(f"{nb_timbres=}, {nb_pitches=}, {nb_harmonics=}")
-        print(f"harmonic distribution: {harmonic_distribution}")
-        # TODO: cleanup frequencies above Shannon frequenc120
-
-        # # self.data = self.harmonic_distribution.repeat()
-        # self.data = harmonic_distribution
-        #
-        # self.data = self.synth.gen_poly(
-        # )
-        self.data = torch.tensor([])
-
-    def __len__(self):
-        return self.data.size(0)
-
-    def __getitem__(self, idx):
-
-        return self.data[0], 0
+    def _pitch_rank(self, pitch):
+        freq = freq_from_pitch(pitch,)
