@@ -90,7 +90,7 @@ def get_rank_of_pitch(
     """
 
     freq = freq_from_pitch(pitch, A4=A4)
-    return (sample_rate / (2 * freq)).round()
+    return sample_rate / (2 * freq)
 
 
 def get_pitch_of_rank(
@@ -99,6 +99,8 @@ def get_pitch_of_rank(
     sample_rate: Number,
     A4: Number,
 ) -> Tensor:
-
+    
     freq = sample_rate / (2 * rank)
-    pitch
+    print(f"gg {freq}")
+    return pitch_from_freq(freq, A4=A4)
+

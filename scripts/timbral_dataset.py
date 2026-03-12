@@ -4,7 +4,11 @@ import matplotlib.pyplot as plt
 
 from src.waveform import Timbre
 from src.dataset import RandomTimbralDataSet
-from src.utils import get_rank_of_pitch, freq_from_pitch
+from src.utils import (
+    get_rank_of_pitch,
+    freq_from_pitch,
+    get_pitch_of_rank,
+)
 
 
 def run(*args, **kwargs):
@@ -12,13 +16,28 @@ def run(*args, **kwargs):
     buffer_size = 1024
     A4 = 440.0
 
-    pitchs = torch.tensor([30, 100, 150])
+    pitchs = torch.tensor([70, 80])
     freqs = freq_from_pitch(pitchs, A4=A4)
     ranks = get_rank_of_pitch(pitchs, sample_rate=sample_rate, A4=A4)
 
-    print(f'{pitchs=}')
-    print(f'{freqs=}')
-    print(f'{ranks=}')
+    print(f"{pitchs=}")
+    print(f"{freqs=}")
+    print(f"{ranks=}")
+
+    ranges = torch.arange(
+        int(ranks[-1].floor()), int(ranks[0].ceil()) + 1
+    ).flip(0)
+    print(f"{ranges=}")
+
+    rank_pitches = get_pitch_of_rank(
+        ranges,
+        sample_rate=sample_rate,
+        A4=A4,
+    )
+
+    rank_pitches[0] = 70
+    rank_pitches[-1] = 80
+    print(f"range {rank_pitches}")
 
     # dataset = TimbralWaveformDataset(
     #     3,

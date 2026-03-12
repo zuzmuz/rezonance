@@ -1,9 +1,14 @@
 import logging
-from numpy import size
 import torch
 from torch.types import Number, Tensor
 from torch.utils.data import Dataset
-from src.utils import freq_from_pitch, pitch_from_freq, current_device
+from src.utils import (
+    freq_from_pitch,
+    get_pitch_of_rank,
+    get_rank_of_pitch,
+    pitch_from_freq,
+    current_device,
+)
 from src.waveform import Timbre, WaveformSynth
 from src.noise_generators import NoiseSynth
 
@@ -226,7 +231,6 @@ class RandomTimbralDataSet(Dataset):
             sample_rate=sample_rate, buffer_size=buffer_size, A4=A4
         )
 
-        # [1/10, 1/8[ [1/8, 1/6[ [1/6, 1/4[ [1/4, 1/2[
         max_possible_pitch = pitch_from_freq(
             0.25 * sample_rate, A4=A4
         )
@@ -242,4 +246,17 @@ class RandomTimbralDataSet(Dataset):
                 max_possible_pitch,
                 sample_rate,
             )
+
+        ranks = get_rank_of_pitch(
+            torch.Tensor([min_pitch, max_pitch]),
+            sample_rate=sample_rate,
+            A4=A4,
+        )
+
+        ranges = torch.zeros(int(ranks[0]) - int(ranks[-1]))
+
+        ranges[1:-1] = get_pitch_of_rank(
+            ranges, sample_rate=sample_rate, A4=A4
+        )
+
 
