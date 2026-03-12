@@ -1,3 +1,4 @@
+from typing import overload
 import numpy as np
 import torch
 from torch.types import Number, Tensor
@@ -5,6 +6,7 @@ from torch.types import Number, Tensor
 
 # current_device = "mps"
 current_device = "cpu"
+
 
 def freq_from_pitch(
     pitch: Tensor,
@@ -22,13 +24,25 @@ def freq_from_pitch(
     """
     return torch.pow(2, (pitch - 69) / 12) * A4
 
-
-
+@overload
 def pitch_from_freq(
     frequency: Number,
     *,
     A4: Number,
-) -> Number:
+) -> Number: ...
+
+@overload
+def pitch_from_freq(
+    frequency: Tensor,
+    *,
+    A4: Number,
+) -> Tensor: ...
+
+def pitch_from_freq(
+    frequency: Number | Tensor,
+    *,
+    A4: Number,
+) -> Number | Tensor:
     """
     Generate a MIDI pitch number from a frequency in Hz.
     0 is C-1 (8.1758 Hz), 69 is A4 (440 Hz)
@@ -39,7 +53,10 @@ def pitch_from_freq(
         The pitch number, same shape as the input frequency, where
         a difference of 1 corresponds to 100 cents
     """
-    return np.log2(frequency / A4) * 12 + 69
+    if isinstance(frequency, torch.Tensor):
+        return torch.log2(frequency / A4) * 12 + 69
+    else:
+        return np.log2(frequency / A4) * 12 + 69
 
 
 def gen_wav_from_spectrum(
@@ -55,7 +72,8 @@ def gen_wav_from_spectrum(
     audio = torch.fft.irfft(spectrum)
     return audio
 
-def get_pitch_rank(
+
+def get_rank_of_pitch(
     pitch: Tensor,
     *,
     sample_rate: Number,
@@ -71,7 +89,16 @@ def get_pitch_rank(
         The pitch ranks, same shape as the input pitches
     """
 
-
     freq = freq_from_pitch(pitch, A4=A4)
-    return (sample_rate / (2*freq)).round()
+    return (sample_rate / (2 * freq)).round()
 
+
+def get_pitch_of_rank(
+    rank: Tensor,
+    *,
+    sample_rate: Number,
+    A4: Number,
+) -> Tensor:
+
+    freq = sample_rate / (2 * rank)
+    pitch

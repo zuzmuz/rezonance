@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 
 from src.waveform import Timbre
 from src.dataset import RandomTimbralDataSet
-from src.utils import get_pitch_rank, freq_from_pitch
+from src.utils import get_rank_of_pitch, freq_from_pitch
 
 
 def run(*args, **kwargs):
@@ -14,7 +14,7 @@ def run(*args, **kwargs):
 
     pitchs = torch.tensor([30, 100, 150])
     freqs = freq_from_pitch(pitchs, A4=A4)
-    ranks = get_pitch_rank(pitchs, sample_rate=sample_rate, A4=A4)
+    ranks = get_rank_of_pitch(pitchs, sample_rate=sample_rate, A4=A4)
 
     print(f'{pitchs=}')
     print(f'{freqs=}')

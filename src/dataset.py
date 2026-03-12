@@ -243,5 +243,3 @@ class RandomTimbralDataSet(Dataset):
                 sample_rate,
             )
 
-    def _pitch_rank(self, pitch):
-        freq = freq_from_pitch(pitch,)
