@@ -9,7 +9,7 @@ from src.utils import (
     pitch_from_freq,
     current_device,
 )
-from src.waveform import Timbre, WaveformSynth
+from src.waveform import WaveformSynth
 from src.noise_generators import NoiseSynth
 
 logger = logging.getLogger(__name__)

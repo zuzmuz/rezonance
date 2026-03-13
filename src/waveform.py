@@ -137,10 +137,9 @@ class InstrumentSynth:
         self.power_dist = power_dist
         self.phase_dist = phase_dist
 
-    def __call__(
+    def generate(
         self, pitches: Tensor, *, per_pitch: int = 1
     ) -> Tensor:
-        freqs = freq_from_pitch(pitches, A4=self.A4)
         ranks = get_rank_of_pitch(
             pitches, sample_rate=self.sample_rate, A4=self.A4
         ).floor()
@@ -153,15 +152,17 @@ class InstrumentSynth:
             multipliers = torch.arange(
                 1, int(rank + 1)
             )  # this is not efficient, rank can stay the same
-            freqs = freq_from_pitch(pitch, A4=self.A4) * multipliers
+            freqs = (
+                freq_from_pitch(pitch, A4=self.A4) * multipliers
+            ).repeat(per_pitch, 1)
             powers = self.power_dist(multipliers, per_pitch)
             phases = self.phase_dist(multipliers, per_pitch)
 
-            signal = self.synth.gen_poly(
-                freqs.repeat(per_pitch, 1), powers, phases
-            )
+            signal = self.synth.gen_poly(freqs, phases, powers)
 
             signals[idx * per_pitch : (idx + 1) * per_pitch] = signal
+
+        print(f"{signals.shape=}")
 
         return signals
 
@@ -188,12 +189,13 @@ class Instrument:
     def square(
         cls, *, buffer_size: int, sample_rate: Number, A4: Number
     ) -> InstrumentSynth:
-        
-        def power_dist_func(multipliers: Tensor, per_pitch: int) -> Tensor:
+
+        def power_dist_func(
+            multipliers: Tensor, per_pitch: int
+        ) -> Tensor:
             mask = torch.zeros_like(multipliers)
             mask[::2] = 1
             return (mask / multipliers).repeat(per_pitch, 1)
-
 
         return InstrumentSynth(
             power_dist=power_dist_func,
@@ -205,3 +207,8 @@ class Instrument:
             A4=A4,
         )
 
+    #
+    # @classmethod
+    # def triangle(
+    #     cls, *, buffer_size: int, sample_rate: Number, A4: Number
+    # ) -> InstrumentS
