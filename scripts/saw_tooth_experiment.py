@@ -25,15 +25,18 @@ def run(*args, **kwargs):
         Instrument.square(
             buffer_size=buffer_size, sample_rate=sample_rate, A4=A4
         ),
+        Instrument.triangle(
+            buffer_size=buffer_size, sample_rate=sample_rate, A4=A4
+        ),
     ]
-   
+
     for instrument in instruments:
         plt.figure()
 
         signals = instrument.generate(
-            torch.linspace(50, 60, 2, dtype=torch.float32), per_pitch=1
+            torch.linspace(50, 60, 2, dtype=torch.float32),
+            per_pitch=1,
         )
-
 
         len_ = len(signals)
         lines = len_

@@ -207,8 +207,25 @@ class Instrument:
             A4=A4,
         )
 
-    #
-    # @classmethod
-    # def triangle(
-    #     cls, *, buffer_size: int, sample_rate: Number, A4: Number
-    # ) -> InstrumentS
+    @classmethod
+    def triangle(
+        cls, *, buffer_size: int, sample_rate: Number, A4: Number
+    ) -> InstrumentSynth:
+
+        def power_dist_func(
+            multipliers: Tensor, per_pitch: int
+        ) -> Tensor:
+            mask = torch.zeros_like(multipliers)
+            mask[::4] = 1
+            mask[2::4] = -1
+            return (mask / multipliers**2).repeat(per_pitch, 1)
+
+        return InstrumentSynth(
+            power_dist=power_dist_func,
+            phase_dist=lambda multipliers, per_pitch: torch.zeros(
+                per_pitch, multipliers.size(0)
+            ),
+            buffer_size=buffer_size,
+            sample_rate=sample_rate,
+            A4=A4,
+        )
