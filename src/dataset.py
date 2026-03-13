@@ -246,17 +246,20 @@ class RandomTimbralDataSet(Dataset):
                 max_possible_pitch,
                 sample_rate,
             )
+        
+        pitches = torch.linspace(
+            min_pitch, max_pitch, nb_pitches, dtype=torch.float32
+        )
 
         ranks = get_rank_of_pitch(
-            torch.Tensor([min_pitch, max_pitch]),
+            pitches,
             sample_rate=sample_rate,
             A4=A4,
         )
 
-        ranges = torch.zeros(int(ranks[0]) - int(ranks[-1]))
+        # rank_pitches[0] = min_pitch
+        # rank_pitches[-1] = max_pitch
 
-        ranges[1:-1] = get_pitch_of_rank(
-            ranges, sample_rate=sample_rate, A4=A4
-        )
+        
 
 

@@ -2,7 +2,7 @@ import torch
 import numpy as np
 import matplotlib.pyplot as plt
 
-from src.waveform import Timbre
+from src.waveform import Timbre, WaveformSynth
 from src.dataset import RandomTimbralDataSet
 from src.utils import (
     get_rank_of_pitch,
@@ -15,61 +15,41 @@ def run(*args, **kwargs):
     sample_rate = 16_000.0
     buffer_size = 1024
     A4 = 440.0
-
-    pitchs = torch.tensor([70, 80])
-    freqs = freq_from_pitch(pitchs, A4=A4)
-    ranks = get_rank_of_pitch(pitchs, sample_rate=sample_rate, A4=A4)
-
-    print(f"{pitchs=}")
-    print(f"{freqs=}")
-    print(f"{ranks=}")
-
-    ranges = torch.arange(
-        int(ranks[-1].floor()), int(ranks[0].ceil()) + 1
-    ).flip(0)
-    print(f"{ranges=}")
-
-    rank_pitches = get_pitch_of_rank(
-        ranges,
-        sample_rate=sample_rate,
-        A4=A4,
+    synth = WaveformSynth(
+        sample_rate=sample_rate, buffer_size=buffer_size, A4=A4
     )
 
-    rank_pitches[0] = 70
-    rank_pitches[-1] = 80
-    print(f"range {rank_pitches}")
+    torch.manual_seed(2)
 
-    # dataset = TimbralWaveformDataset(
-    #     3,
-    #     timbres=[
-    #         Timbre(
-    #             torch.tensor(
-    #                 [
-    #                     [1.0, 0.5, 0.8],
-    #                     [2.0, 0.25, 0.4],
-    #                     [3.0, 0.5, 0.5],
-    #                     [4.0, 0.2, 0.2],
-    #                     [5.0, 0.9, 0.1],
-    #                     [6.0, 1.5, 0.1],
-    #                 ]
-    #             ),
-    #             sample_rate=sample_rate,
-    #         ),
-    #     ],
-    #     sample_rate=sample_rate,
-    #     buffer_size=buffer_size,
-    #     A4=A4,
-    #     min_pitch=60,
-    #     max_pitch=140,
-    # )
-    #
-    # # plt.figure()
-    # #
-    # # len_ = len(dataset)
-    # # lines = len_ / 3
-    # #
-    # # for idx, element in enumerate(dataset):  # type: ignore
-    # #     plt.subplot(lines, 3, idx + 1)
-    # #     plt.plot(element[0].cpu().detach().numpy())
-    #
-    # plt.show()
+    pitches = torch.linspace(100, 107, 2, dtype=torch.float32)
+    freqs = freq_from_pitch(pitches, A4=A4)
+    ranks = get_rank_of_pitch(
+        pitches, sample_rate=sample_rate, A4=A4
+    ).floor()
+    alpha = 2.5
+    signals = []
+    for rank, pitch in zip(ranks, pitches):
+        multipliers = torch.arange(1, int(rank + 1))
+        freqs = freq_from_pitch(pitch, A4=A4) * multipliers
+        powers = torch.rand(int(rank)) / (multipliers**alpha)
+        phases = torch.rand(int(rank)) * 2
+
+        print(f"{multipliers=}")
+        sig = synth.gen_poly(
+            freqs.unsqueeze(0),
+            phases.unsqueeze(0),
+            powers.unsqueeze(0),
+        )[0]
+        print(f"{sig.shape=}")
+        signals.append(sig)
+
+    plt.figure()
+
+    len_ = len(signals)
+    lines = len_
+
+    for idx, element in enumerate(signals):  # type: ignore
+        plt.subplot(lines, 1, idx + 1)
+        plt.plot(element.cpu().detach().numpy())
+
+    plt.show()

@@ -1,7 +1,7 @@
 import numpy as np
 import torch
 from torch.types import Tensor, Number
-from typing import Callable
+from typing import Callable, overload
 
 from src.utils import freq_from_pitch
 
@@ -60,8 +60,36 @@ class WaveformSynth:
 
     def gen_poly(
         self,
-        params: Tensor,
+        frequencies: Tensor,
+        phases: Tensor,
+        powers: Tensor,
     ) -> Tensor:
+
+        frequencies = frequencies.unsqueeze(2)
+        phases = phases.unsqueeze(2)
+        powers = powers.unsqueeze(2)
+
+        # Generating the linspace for the waveform, this will represent time
+        linspace = (
+            torch.linspace(
+                0,
+                self.buffer_size / self.sample_rate,
+                self.buffer_size,
+            )
+            .unsqueeze(0)
+            .unsqueeze(0)
+            .repeat(frequencies.size(0), 1, 1)
+        )
+        # adding a dimension and repeating for each signal,
+        # linspace shape `(n, 1, buffer_size)`
+
+        FT = torch.baddbmm(phases, frequencies, linspace)
+
+        sines = powers * torch.sin(FT * np.pi)
+
+        return sines.sum(dim=1)  # summing harmonics
+
+    def gen_poly_from_params(self, params: Tensor) -> Tensor:
         """
         Generating polyphonic waveform as sum of sinewaves from a distriution of parameters.
         Parameters:
@@ -78,30 +106,16 @@ class WaveformSynth:
             the result is not scaled or normalized, consider dividing by std
         """
 
-        # Generating the linspace for the waveform, this will represent time
-        linspace = (
-            torch.linspace(
-                0,
-                self.buffer_size / self.sample_rate,
-                self.buffer_size,
-            )
-            .unsqueeze(0)
-            .unsqueeze(0)
-            .repeat(params.size(0), 1, 1)
+        # Creating frequencies and phases matrices from params, shape(n, p,)
+        frequencies = params[:, :, 0]
+        phases = params[:, :, 1]
+        powers = params[:, :, 2]
+
+        return self.gen_poly(
+            frequencies,
+            phases,
+            powers,
         )
-        # adding a dimension and repeating for each signal,
-        # linspace shape `(n, 1, buffer_size)`
-
-        # Creating frequencies and phases matrices from params, shape(n, p, 1)
-        frequencies = params[:, :, 0].unsqueeze(2)
-        phases = params[:, :, 1].unsqueeze(2)
-        powers = params[:, :, 2].unsqueeze(2)
-
-        FT = torch.baddbmm(phases, frequencies, linspace)
-
-        sines = powers * torch.sin(FT * np.pi)
-
-        return sines.sum(dim=1)  # summing harmonics
 
 
 class Timbre:

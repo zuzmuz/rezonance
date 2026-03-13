@@ -99,8 +99,15 @@ def get_pitch_of_rank(
     sample_rate: Number,
     A4: Number,
 ) -> Tensor:
-    
+    """
+    Calculate the possible pitch given the number of harmonics, taking into account the Shanon frequency
+    Parameters:
+        pitch (tensor): The pitches to calculate rank for
+        sample_rate (Number): The sampling rate
+        A4 (Number): The reference frequency for A4 in Hz
+    Returns:
+        The pitch ranks, same shape as the input pitches
+    """
     freq = sample_rate / (2 * rank)
-    print(f"gg {freq}")
     return pitch_from_freq(freq, A4=A4)
 
