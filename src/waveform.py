@@ -229,3 +229,24 @@ class Instrument:
             sample_rate=sample_rate,
             A4=A4,
         )
+
+    @classmethod
+    def random(
+        cls,
+        alpha: Number,
+        *,
+        buffer_size: int,
+        sample_rate: Number,
+        A4: Number,
+    ) -> InstrumentSynth:
+        return InstrumentSynth(
+            power_dist=lambda multipliers, per_pitch: torch.rand(
+                per_pitch, multipliers.size(0)
+            ) / (multipliers**alpha).unsqueeze(0),
+            phase_dist=lambda multipliers, per_pitch: torch.rand(
+                per_pitch, multipliers.size(0)
+            ) * 2,
+            buffer_size=buffer_size,
+            sample_rate=sample_rate,
+            A4=A4,
+        )
