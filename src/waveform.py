@@ -3,7 +3,7 @@ import torch
 from torch.types import Tensor, Number
 from typing import Callable, overload
 
-from src.utils import freq_from_pitch
+from src.utils import freq_from_pitch, get_rank_of_pitch
 
 
 class WaveformSynth:
@@ -118,57 +118,90 @@ class WaveformSynth:
         )
 
 
-class Timbre:
-    """
-    A timbre class for generating harmonic distributions from pitch
-    Parameters:
-        distriution (tensor): the harmonic distribution tensor, shape `(n, 3)`,
-            - n, number of harmonics
-            - 3:
-                - the frequency multiplier
-                - the phase
-                - the power
-    KewordArguments:
-        sample_rate (float): the sample rate of the generated waveform, required to limit frequencies generated to the Shannon frequency
-        A4 (float): the reference frequency of the A4 note
-    """
-
+class InstrumentSynth:
     def __init__(
         self,
-        distriution: Tensor,
+        power_dist: Callable[[Tensor, int], Tensor],
+        phase_dist: Callable[[Tensor, int], Tensor],
         *,
+        buffer_size: int,
         sample_rate: Number,
-        A4: Number = 440,
+        A4: Number,
     ):
+        self.buffer_size = buffer_size
         self.sample_rate = sample_rate
-        self.distriution = distriution
         self.A4 = A4
+        self.synth = WaveformSynth(
+            sample_rate=sample_rate, buffer_size=buffer_size, A4=A4
+        )
+        self.power_dist = power_dist
+        self.phase_dist = phase_dist
 
-    def gen_harmonics(self, pitch: Tensor) -> Tensor:
-        """
-        Generate harmonics from pitch according to the timbre's distribution.
-        Parameters:
-            pitch (tensor): the pitch or pitches to generate harmonics for
-                if pitch is a scalar, the output shape is `(n, 3)`,
-                if pitch is a 1D tensor of shape `(nb_pitches,)`, the output shape is `(nb_pitches, n, 3)`
-        Returns:
-            The harmonics tensor, shape depending on the input pitch shape
-        """
-        frequency = freq_from_pitch(pitch, A4=self.A4)
-        # here pitch can be a tensor shape `(nb_pitches)`
+    def __call__(
+        self, pitches: Tensor, *, per_pitch: int = 1
+    ) -> Tensor:
+        freqs = freq_from_pitch(pitches, A4=self.A4)
+        ranks = get_rank_of_pitch(
+            pitches, sample_rate=self.sample_rate, A4=self.A4
+        ).floor()
 
-        harmonics = self.distriution.clone()  # shape `(n, 3)`
+        signals = torch.zeros(
+            pitches.size(0) * per_pitch, self.buffer_size
+        )
 
-        if pitch.ndim == 1:
-            harmonics = harmonics.unsqueeze(0).repeat(
-                pitch.size(0), 1, 1
+        for idx, (rank, pitch) in enumerate(zip(ranks, pitches)):
+            multipliers = torch.arange(
+                1, int(rank + 1)
+            )  # this is not efficient, rank can stay the same
+            freqs = freq_from_pitch(pitch, A4=self.A4) * multipliers
+            powers = self.power_dist(multipliers, per_pitch)
+            phases = self.phase_dist(multipliers, per_pitch)
+
+            signal = self.synth.gen_poly(
+                freqs.repeat(per_pitch, 1), powers, phases
             )
-            frequency = frequency.unsqueeze(1)
-            harmonics[:, :, 0] = frequency * harmonics[:, :, 0]
-        elif pitch.ndim == 0:
-            harmonics[:, 0] = frequency * harmonics[:, 0]
-        else:
-            raise ValueError(
-                "Pitch should be a scalar or a 1D tensor"
-            )
-        return harmonics
+
+            signals[idx * per_pitch : (idx + 1) * per_pitch] = signal
+
+        return signals
+
+
+class Instrument:
+    @classmethod
+    def saw(
+        cls, *, buffer_size: int, sample_rate: Number, A4: Number
+    ) -> InstrumentSynth:
+
+        return InstrumentSynth(
+            power_dist=lambda multipliers, per_pitch: (
+                1 / (multipliers)
+            ).repeat(per_pitch, 1),
+            phase_dist=lambda multipliers, per_pitch: torch.zeros(
+                per_pitch, multipliers.size(0)
+            ),
+            buffer_size=buffer_size,
+            sample_rate=sample_rate,
+            A4=A4,
+        )
+
+    @classmethod
+    def square(
+        cls, *, buffer_size: int, sample_rate: Number, A4: Number
+    ) -> InstrumentSynth:
+        
+        def power_dist_func(multipliers: Tensor, per_pitch: int) -> Tensor:
+            mask = torch.zeros_like(multipliers)
+            mask[::2] = 1
+            return (mask / multipliers).repeat(per_pitch, 1)
+
+
+        return InstrumentSynth(
+            power_dist=power_dist_func,
+            phase_dist=lambda multipliers, per_pitch: torch.zeros(
+                per_pitch, multipliers.size(0)
+            ),
+            buffer_size=buffer_size,
+            sample_rate=sample_rate,
+            A4=A4,
+        )
+
