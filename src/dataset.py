@@ -126,7 +126,6 @@ class RandomTimbralDataSet(Dataset):
         self,
         nb_pitches: int,
         nb_harm_dist: int,
-        nb_noises: int,
         *,
         sample_rate: Number = 16_000,
         buffer_size: int = 1024,
@@ -155,7 +154,7 @@ class RandomTimbralDataSet(Dataset):
 
         if not max_pitch:
             max_pitch = max_possible_pitch
-        elif max_pitch < max_possible_pitch:
+        elif max_pitch > max_possible_pitch:
             logger.warning(
                 "Provided max_pitch %.2f "
                 "exceeds the maximum possible pitch %.2f"

@@ -162,8 +162,6 @@ class InstrumentSynth:
 
             signals[idx * per_pitch : (idx + 1) * per_pitch] = signal
 
-        print(f"{signals.shape=}")
-
         return signals
 
 
@@ -240,12 +238,13 @@ class Instrument:
         A4: Number,
     ) -> InstrumentSynth:
         return InstrumentSynth(
-            power_dist=lambda multipliers, per_pitch: torch.rand(
-                per_pitch, multipliers.size(0)
-            ) / (multipliers**alpha).unsqueeze(0),
-            phase_dist=lambda multipliers, per_pitch: torch.rand(
-                per_pitch, multipliers.size(0)
-            ) * 2,
+            power_dist=lambda multipliers, per_pitch: (
+                torch.rand(per_pitch, multipliers.size(0))
+                / (multipliers**alpha).unsqueeze(0)
+            ),
+            phase_dist=lambda multipliers, per_pitch: (
+                torch.rand(per_pitch, multipliers.size(0)) * 2
+            ),
             buffer_size=buffer_size,
             sample_rate=sample_rate,
             A4=A4,

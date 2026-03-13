@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 
 from src.noise_generators import Noise
-from src.dataset import NoisySineWaveformDataset, LazyNoisySineWaveformDataset
+from src.dataset import NoisySineWaveformDataset
 
 def run(*args, **kwargs):
     sample_rate = 16_000.0
@@ -25,27 +25,6 @@ def run(*args, **kwargs):
             Noise.violet(0.2) + Noise.brown(0.2),
             Noise.blue(0.1) + Noise.brown(0.3),
             Noise.blue(0.3) + Noise.brown(0.05),
-        ],
-        sample_rate=sample_rate,
-        buffer_size=buffer_size,
-        A4=A4,
-        min_pitch=60,
-        max_pitch=70,
-    )
-
-    plt.figure()
-
-    for idx, element in enumerate(dataset): # type: ignore
-        plt.subplot(4, 3, idx + 1)
-        plt.plot(element[0].cpu().detach().numpy(), linewidth=0.5)
-
-    dataset = LazyNoisySineWaveformDataset(
-        2,
-        2,
-        noises=[
-            Noise.white(0.05),
-            Noise.pink(0.3),
-            Noise.violet(0.2) + Noise.brown(0.2),
         ],
         sample_rate=sample_rate,
         buffer_size=buffer_size,

@@ -1,3 +1,4 @@
+import logging
 import torch
 import matplotlib.pyplot as plt
 import importlib
@@ -5,12 +6,12 @@ import pkgutil
 from argparse import ArgumentParser
 from src.utils import current_device
 
+logger = logging.getLogger(__name__)
 
 def main():
-    # torch.set_default_device("cpu")
     torch.set_default_device(current_device)
 
-    print("Using device:", torch.get_default_device())
+    logger.info("Using device:", torch.get_default_device())
 
     plt.rcParams["axes.grid"] = True
     plt.rcParams["figure.autolayout"] = True
