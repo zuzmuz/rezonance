@@ -1,11 +1,12 @@
+import logging
 import time
 import torch
 import numpy as np
 import matplotlib.pyplot as plt
+from src.logger import logger
 from src.dataset import (
     NoisySineWaveformDataset,
-    LazyNoisySineWaveformDataset,
-    # SineWaveformDataset,
+    RandomTimbralDataSet,
 )
 from src.training import (
     FCModel,
@@ -20,43 +21,32 @@ def run(*args, verbose: bool = False, **kwargs):
     buffer_size = 1024
     A4 = 440.0
 
-    dataset = NoisySineWaveformDataset(
+    # dataset = NoisySineWaveformDataset(
+    #     500,
+    #     50,
+    #     noises=[
+    #         Noise.white(0.05),
+    #         Noise.pink(0.1),
+    #         Noise.brown(0.2),
+    #     ],
+    #     sample_rate=sample_rate,
+    #     buffer_size=buffer_size,
+    #     A4=A4,
+    # )
+
+    dataset = RandomTimbralDataSet(
         500,
-        50,
-        noises=[
-            Noise.white(0.05),
-            Noise.pink(0.1),
-            Noise.brown(0.2),
-        ],
+        1000,
         sample_rate=sample_rate,
         buffer_size=buffer_size,
         A4=A4,
     )
 
     trainer = Trainer(FCModel(buffer_size))
-
-    stamp = time.perf_counter() 
+    logger.info("starting training")
+    stamp = time.perf_counter()
     history = trainer.train(6, dataset)
-    print(f"finished non lazy dataset {time.perf_counter() - stamp}")
-
-    dataset = LazyNoisySineWaveformDataset(
-        500,
-        50,
-        noises=[
-            Noise.white(0.05),
-            Noise.pink(0.1),
-            Noise.brown(0.2),
-        ],
-        sample_rate=sample_rate,
-        buffer_size=buffer_size,
-        A4=A4,
-    )
-
-    trainer = Trainer(FCModel(buffer_size))
-
-    stamp = time.perf_counter() 
-    history = trainer.train(6, dataset)
-    print(f"finished lazy dataset {time.perf_counter() - stamp}")
+    logger.info(f"finished training {time.perf_counter() - stamp}")
 
     # plt.figure()
     # plt.title('history')

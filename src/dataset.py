@@ -1,7 +1,7 @@
-import logging
 import torch
 from torch.types import Number, Tensor
 from torch.utils.data import Dataset
+from src.logger import logger
 from src.utils import (
     freq_from_pitch,
     get_pitch_of_rank,
@@ -11,8 +11,6 @@ from src.utils import (
 )
 from src.waveform import Instrument, WaveformSynth
 from src.noise_generators import NoiseSynth
-
-logger = logging.getLogger(__name__)
 
 
 class NoisySineWaveformDataset(Dataset):
