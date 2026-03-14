@@ -3,7 +3,7 @@ import torch
 import matplotlib.pyplot as plt
 from src.logger import logger
 from src.utils import freq_from_pitch
-from src.dataset import NSynthDataset
+from src.real_dataset import NSynthDataset
 
 
 def run(*args, **kwargs):

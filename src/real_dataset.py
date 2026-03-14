@@ -4,13 +4,14 @@ import pandas as pd
 
 import torch
 from torch import Tensor
-from torch.types import Number 
+from torch.types import Number
 from torch.utils.data import Dataset
 
 import torchaudio
 from torchcodec.decoders import AudioDecoder
 
 from src.logger import logger
+
 
 class NSynthDataset(Dataset):
     def __init__(
@@ -31,24 +32,32 @@ class NSynthDataset(Dataset):
             self.data["sample_rate"] == self.sample_rate
         ]
 
-        file_name = self._get_file_name(0)
-
         c = time.perf_counter()
-        decoder = AudioDecoder(file_name)
-        logger.debug(f"{decoder.metadata.duration_seconds=}")
-        logger.debug(f"it took {time.perf_counter() - c}")
 
-        c = time.perf_counter()
-        signal, _ = torchaudio.load(file_name)
-        logger.debug(f"{signal.shape}")
-        logger.debug(f"it took {time.perf_counter() - c}")
+        def get_file_num_frames(row):
+            file_name = self.folder / "audio" / f"{row['note_str']}.wav"
+            signal, _ = torchaudio.load(file_name)
+            return signal.shape
 
-    def _get_file_name(self, idx) -> Path:
-        return (
-            self.folder
-            / "audio"
-            / f"{self.data['note_str'].iloc[idx]}.wav"
+        # def get_file_num_frames(row):
+        #     file_name = (
+        #         self.folder / "audio" / f"{row['note_str']}.wav"
+        #     )
+        #     decoded = AudioDecoder(file_name)
+        #     return (
+        #         decoded.metadata.num_channels,
+        #         decoded.metadata.duration_seconds
+        #         * decoded.metadata.sample_rate,
+        #     )
+
+        self.data["num_frames"] = self.data.apply(
+            get_file_num_frames, axis=1
         )
+
+        logger.debug(
+            f"{self.data[['note_str', 'num_frames']].head(5)}"
+        )
+        logger.debug(f"it took {time.perf_counter() - c}")
 
     def __len__(self):
         return self.data.shape[0]
