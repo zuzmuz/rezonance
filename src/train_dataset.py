@@ -1,9 +1,7 @@
-from pathlib import Path
-import pandas as pd
 import torch
 from torch.types import Number, Tensor
 from torch.utils.data import Dataset
-import torchaudio
+
 from src.logger import logger
 from src.utils import (
     freq_from_pitch,
@@ -189,33 +187,3 @@ class RandomTimbralDataset(Dataset):
         return waveform, pitch
 
 
-class NSynthDataset(Dataset):
-    def __init__(
-        self,
-        folder: Path,
-        sample_rate: Number,
-        buffer_size: int,
-    ):
-        self.folder = folder
-        json_file = folder / "examples.json"
-
-        self.data = pd.read_json(json_file).T.reset_index()
-
-        logger.debug(f"{self.data['sample_rate'].unique()}")
-        self.sample_rate = sample_rate
-        self.buffer_size = buffer_size
-
-    def __len__(self):
-        return self.data.shape[0]
-
-    def __getitem__(self, idx):
-        pitch = self.data["pitch"].iloc[idx]
-        file_name = (
-            self.folder
-            / "audio"
-            / f"{self.data['note_str'].iloc[idx]}.wav"
-        )
-
-        signal, sample_rate = torchaudio.load(file_name)
-
-        return signal, pitch
