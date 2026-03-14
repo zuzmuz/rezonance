@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from src.waveform import Instrument, WaveformSynth
-from src.dataset import RandomTimbralDataSet
+from src.dataset import RandomTimbralDataset
 from src.utils import (
     get_rank_of_pitch,
     freq_from_pitch,

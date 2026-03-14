@@ -1,7 +1,7 @@
 import torch
 import matplotlib.pyplot as plt
 from src.utils import freq_from_pitch
-from src.dataset import RandomTimbralDataSet
+from src.dataset import RandomTimbralDataset
 
 
 def run(*args, **kwargs):
@@ -9,7 +9,7 @@ def run(*args, **kwargs):
     buffer_size = 1024
     A4 = 440.0
 
-    dataset = RandomTimbralDataSet(
+    dataset = RandomTimbralDataset(
         3,
         2,
         sample_rate=sample_rate,

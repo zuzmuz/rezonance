@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from src.logger import logger
 from src.dataset import (
     NoisySineWaveformDataset,
-    RandomTimbralDataSet,
+    RandomTimbralDataset,
 )
 from src.training import (
     FCModel,
@@ -21,20 +21,7 @@ def run(*args, verbose: bool = False, **kwargs):
     buffer_size = 1024
     A4 = 440.0
 
-    # dataset = NoisySineWaveformDataset(
-    #     500,
-    #     50,
-    #     noises=[
-    #         Noise.white(0.05),
-    #         Noise.pink(0.1),
-    #         Noise.brown(0.2),
-    #     ],
-    #     sample_rate=sample_rate,
-    #     buffer_size=buffer_size,
-    #     A4=A4,
-    # )
-
-    dataset = RandomTimbralDataSet(
+    dataset = RandomTimbralDataset(
         500,
         1000,
         sample_rate=sample_rate,
