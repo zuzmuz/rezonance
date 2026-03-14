@@ -1,7 +1,7 @@
 import torch
 import matplotlib.pyplot as plt
 from src.utils import freq_from_pitch
-from src.dataset import RandomTimbralDataset
+from src.train_dataset import RandomTimbralDataset
 
 
 def run(*args, **kwargs):

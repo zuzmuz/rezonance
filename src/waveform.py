@@ -1,7 +1,8 @@
 import numpy as np
 import torch
-from torch.types import Tensor, Number
-from typing import Callable, overload
+from torch import Tensor
+from torch.types import Number
+from typing import Callable
 
 from src.utils import freq_from_pitch, get_rank_of_pitch
 

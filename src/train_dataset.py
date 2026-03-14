@@ -1,5 +1,6 @@
 import torch
-from torch.types import Number, Tensor
+from torch.types import Number 
+from torch import Tensor
 from torch.utils.data import Dataset
 
 from src.logger import logger

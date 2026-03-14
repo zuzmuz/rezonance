@@ -3,7 +3,8 @@ from pathlib import Path
 import pandas as pd
 
 import torch
-from torch.types import Number, Tensor
+from torch import Tensor
+from torch.types import Number 
 from torch.utils.data import Dataset
 
 import torchaudio

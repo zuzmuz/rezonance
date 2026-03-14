@@ -1,7 +1,8 @@
 from typing import overload
 import numpy as np
 import torch
-from torch.types import Number, Tensor
+from torch import Tensor
+from torch.types import Number
 
 
 # current_device = "mps"

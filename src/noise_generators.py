@@ -1,5 +1,6 @@
 import torch
-from torch.types import Tensor, Number
+from torch import Tensor
+from torch.types import Number 
 from typing import Callable
 from src.utils import current_device
 
