@@ -1,15 +1,17 @@
 [project]
 name = "rezonance"
 version = "0.1.0"
-description = "Add your description here"
+description = "Monophonic and polyphonic playground"
 readme = "README.md"
 requires-python = "==3.14.*"
 dependencies = [
     'ipython',
     'numpy==2.3.*',
     'scikit-learn==1.8.*',
-    'torch==2.9.*',
+    'torch==2.10.*',
     'pandas==3.0.*',
+    'torchaudio==2.10.*',
+    'torchcodec==0.10.*',
     'matplotlib',
     'sounddevice',
 ]
