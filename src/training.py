@@ -73,7 +73,7 @@ class Trainer:
         batch_size: int = 512,
         store_history: bool = True,
         log_epochs: int = 5,
-        model_path: Path = Path("models", "model.pth"),
+        model_path: Path = Path("saved_models", "model.pth"),
     ):
         """
         Train model for an ammound of epochs
@@ -129,10 +129,12 @@ class Trainer:
                 if log_epochs > 0 and (epoch + 1) % log_epochs == 0:
                     logger.info(
                         f"Epoch {epoch + 1}:"
-                        f"\n\tTraining Loss = {train_loss:.5f}"
-                        f"\n\tValidation Loss = {validation_loss:.5f}"
-                        if validation_loss
-                        else ""
+                        + f"\n\tTraining Loss = {train_loss:.5f}"
+                        + (
+                            f"\n\tValidation Loss = {validation_loss:.5f}"
+                            if validation_loss
+                            else ""
+                        )
                     )
 
         except KeyboardInterrupt:

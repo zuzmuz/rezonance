@@ -53,7 +53,7 @@ class NoisySineWaveformDataset(Dataset):
         # Creating all noises
         # shape `(nb_noises, buffer_size)`
         self.noises = torch.stack(
-            [synth(buffer_size) for synth in noises]
+            [synth.generate(buffer_size) for synth in noises]
         )
 
         # max pitch is necessary to prevent aliasing

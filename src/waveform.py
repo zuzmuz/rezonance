@@ -1,10 +1,11 @@
 import numpy as np
 import torch
-from torch import Tensor
+from torch import Tensor, mul
 from torch.types import Number
 from typing import Callable
 
 from src.utils import freq_from_pitch, get_rank_of_pitch
+from src.logger import logger
 
 
 class WaveformSynth:
@@ -84,9 +85,9 @@ class WaveformSynth:
         # adding a dimension and repeating for each signal,
         # linspace shape `(n, 1, buffer_size)`
 
-        FT = torch.baddbmm(phases, frequencies, linspace)
+        FT = torch.bmm(frequencies, linspace)
 
-        sines = powers * torch.sin(FT * np.pi)
+        sines = powers * torch.sin(2 * torch.pi * (FT + phases))
 
         return sines.sum(dim=1)  # summing harmonics
 
@@ -176,9 +177,9 @@ class Instrument:
             power_dist=lambda multipliers, per_pitch: (
                 1 / (multipliers)
             ).repeat(per_pitch, 1),
-            phase_dist=lambda multipliers, per_pitch: torch.zeros(
-                per_pitch, multipliers.size(0)
-            ),
+            phase_dist=lambda multipliers, per_pitch: torch.rand(
+                per_pitch
+            ).repeat(multipliers.size(0), 1).T * multipliers, 
             buffer_size=buffer_size,
             sample_rate=sample_rate,
             A4=A4,
@@ -198,9 +199,9 @@ class Instrument:
 
         return InstrumentSynth(
             power_dist=power_dist_func,
-            phase_dist=lambda multipliers, per_pitch: torch.zeros(
-                per_pitch, multipliers.size(0)
-            ),
+            phase_dist=lambda multipliers, per_pitch: torch.rand(
+                per_pitch
+            ).repeat(multipliers.size(0), 1).T * multipliers,
             buffer_size=buffer_size,
             sample_rate=sample_rate,
             A4=A4,
@@ -221,8 +222,29 @@ class Instrument:
 
         return InstrumentSynth(
             power_dist=power_dist_func,
-            phase_dist=lambda multipliers, per_pitch: torch.zeros(
-                per_pitch, multipliers.size(0)
+            phase_dist=lambda multipliers, per_pitch: torch.rand(
+                per_pitch
+            ).repeat(multipliers.size(0), 1).T * multipliers,
+            buffer_size=buffer_size,
+            sample_rate=sample_rate,
+            A4=A4,
+        )
+
+    @classmethod
+    def sine(
+        cls, *, buffer_size: int, sample_rate: Number, A4: Number
+    ) -> InstrumentSynth:
+        def power_dist_func(
+            multipliers: Tensor, per_pitch: int
+        ) -> Tensor:
+            mask = torch.zeros_like(multipliers)
+            mask[0] = 1
+            return mask.repeat(per_pitch, 1)
+
+        return InstrumentSynth(
+            power_dist=power_dist_func,
+            phase_dist=lambda multipliers, per_pitch: (
+                torch.rand(per_pitch, multipliers.size(0)) * 2
             ),
             buffer_size=buffer_size,
             sample_rate=sample_rate,

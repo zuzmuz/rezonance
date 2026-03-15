@@ -43,7 +43,7 @@ def run(*args, verbose: bool = False, **kwargs):
 
     logger.info("starting training")
     stamp = time.perf_counter()
-    trainer.train(train_dataset, validation_dataset)
+    trainer.train(train_dataset) #, validation_dataset)
     logger.info(f"finished training {time.perf_counter() - stamp}")
 
     plt.figure()

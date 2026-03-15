@@ -1,14 +1,7 @@
 import torch
-import numpy as np
 import matplotlib.pyplot as plt
 
-from src.waveform import Instrument, WaveformSynth
-from src.dataset import RandomTimbralDataset
-from src.utils import (
-    get_rank_of_pitch,
-    freq_from_pitch,
-    get_pitch_of_rank,
-)
+from src.waveform import Instrument
 
 
 def run(*args, **kwargs):
@@ -17,6 +10,8 @@ def run(*args, **kwargs):
     sample_rate = 16_000.0
     buffer_size = 1024
     A4 = 440.0
+
+    torch.manual_seed(3)
 
     instruments = [
         Instrument.saw(
@@ -30,19 +25,18 @@ def run(*args, **kwargs):
         ),
     ]
 
-    for instrument in instruments:
-        plt.figure()
+    plt.figure()
+    lines = 3 * 2
+    for instr_idx, instrument in enumerate(instruments):
 
         signals = instrument.generate(
-            torch.linspace(50, 60, 2, dtype=torch.float32),
-            per_pitch=1,
+            torch.tensor([60]),
+            per_pitch=2,
         )
 
-        len_ = len(signals)
-        lines = len_
 
         for idx, element in enumerate(signals):  # type: ignore
-            plt.subplot(lines, 1, idx + 1)
+            plt.subplot(lines, 1, instr_idx*2 + idx + 1)
             plt.plot(element.cpu().detach().numpy())
 
     plt.show()
