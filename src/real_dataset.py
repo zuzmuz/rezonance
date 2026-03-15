@@ -19,9 +19,11 @@ class NSynthDataset(Dataset):
         folder: Path,
         sample_rate: Number,
         buffer_size: int,
+        element_per_file: int,
     ):
         self.sample_rate = sample_rate
         self.buffer_size = buffer_size
+        self.element_per_file = element_per_file
 
         self.folder = folder
         json_file = folder / "examples.json"
@@ -32,45 +34,27 @@ class NSynthDataset(Dataset):
             self.data["sample_rate"] == self.sample_rate
         ]
 
-        c = time.perf_counter()
-
-        def get_file_num_frames(row):
-            file_name = self.folder / "audio" / f"{row['note_str']}.wav"
-            signal, _ = torchaudio.load(file_name)
-            return signal.shape
-
-        # def get_file_num_frames(row):
-        #     file_name = (
-        #         self.folder / "audio" / f"{row['note_str']}.wav"
-        #     )
-        #     decoded = AudioDecoder(file_name)
-        #     return (
-        #         decoded.metadata.num_channels,
-        #         decoded.metadata.duration_seconds
-        #         * decoded.metadata.sample_rate,
-        #     )
-
-        self.data["num_frames"] = self.data.apply(
-            get_file_num_frames, axis=1
-        )
-
-        logger.debug(
-            f"{self.data[['note_str', 'num_frames']].head(5)}"
-        )
-        logger.debug(f"it took {time.perf_counter() - c}")
-
     def __len__(self):
-        return self.data.shape[0]
+        return self.data.shape[0] * self.element_per_file
 
     def __getitem__(self, idx):
-        logger.debug(self.data["note_str"].iloc[idx])
-        pitch = self.data["pitch"].iloc[idx]
-        file_name = (
-            self.folder
-            / "audio"
-            / f"{self.data['note_str'].iloc[idx]}.wav"
-        )
+
+        row = self.data.iloc[idx // self.element_per_file]
+
+        pitch = row["pitch"]
+
+        file_name = self.folder / "audio" / f"{row['note_str']}.wav"
 
         signal, _ = torchaudio.load(file_name)
 
-        return signal, pitch
+        if signal.size(0) == 2:
+            signal = signal.mean(0)
+        else:
+            signal = signal[0]
+
+        return signal[
+            (2 + idx % self.element_per_file) * self.buffer_size : (
+                2 + idx % self.element_per_file + 1
+            )
+            * self.buffer_size
+        ], pitch
