@@ -66,15 +66,30 @@ class Trainer:
 
     def train(
         self,
-        nb_epoch: int,
         train_dataset: Dataset,
         validation_dataset: Dataset | None = None,
         *,
+        nb_epoch: int = 1000,
         batch_size: int = 512,
         store_history: bool = True,
         log_epochs: int = 5,
         model_path: Path = Path("models", "model.pth"),
     ):
+        """
+        Train model for an ammound of epochs
+        Parameters:
+            train_dataset: (Dataset),
+            validation_dataset: (Dataset | None)
+        Keyword Arguments:
+            nb_epoch: (int) number of epochs to train the model for (obviously)
+            batch_size: (int) the size of the batches of the dataloader
+            store_history: (bool) store history if needed for display or whatever
+            log_epochs: (int) logs loss at each checkpoint, set to -1 to disable logging (who whould want that)
+            model_path: (Path) path to store model in when training is done
+
+        """
+
+        # creating training dataloader
         train_data_loader = DataLoader(
             train_dataset,
             batch_size=batch_size,
@@ -82,6 +97,7 @@ class Trainer:
             generator=torch.Generator(current_device),
         )
 
+        # creating validation dataloader id validation dataset is provided
         validation_data_loader = None
         if validation_dataset:
             validation_data_loader = DataLoader(
@@ -115,6 +131,8 @@ class Trainer:
                         f"Epoch {epoch + 1}:"
                         f"\n\tTraining Loss = {train_loss:.5f}"
                         f"\n\tValidation Loss = {validation_loss:.5f}"
+                        if validation_loss
+                        else ""
                     )
 
         except KeyboardInterrupt:
