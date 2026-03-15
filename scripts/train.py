@@ -1,5 +1,5 @@
-import logging
 import time
+from pathlib import Path
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -19,13 +19,21 @@ def run(*args, verbose: bool = False, **kwargs):
     buffer_size = 1024
     A4 = 440.0
 
-    dataset = RandomTimbralDataset(
+    train_dataset = RandomTimbralDataset(
         500,
         1000,
         sample_rate=sample_rate,
         buffer_size=buffer_size,
         A4=A4,
     )
+
+    validation_dataset = NSynthDataset(
+        Path("data", "nsynth-valid"),
+        sample_rate,
+        buffer_size,
+        element_per_file=5
+    )
+
     
     model = FCLinearModel(buffer_size)
     criterion = nn.MSELoss()
@@ -35,11 +43,12 @@ def run(*args, verbose: bool = False, **kwargs):
 
     logger.info("starting training")
     stamp = time.perf_counter()
-    trainer.train(6, dataset)
+    trainer.train(train_dataset, validation_dataset)
     logger.info(f"finished training {time.perf_counter() - stamp}")
 
-    # plt.figure()
-    # plt.title('history')
-    # plt.plot(history)
-    # plt.show()
-    # trainer.save_model("monophonic_model.pth")
+    plt.figure()
+    plt.title('history')
+    plt.plot(trainer.train_history, label="Training Loss")
+    plt.plot(trainer.validation_history, label="Validation Loss")
+    plt.legend()
+    plt.show()
