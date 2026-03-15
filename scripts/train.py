@@ -7,10 +7,9 @@ import matplotlib.pyplot as plt
 from src.logger import logger
 from src.train_dataset import RandomTimbralDataset
 from src.real_dataset import NSynthDataset
-from src.training import (
-    FCLinearModel,
-    Trainer,
-)
+from src.training import Trainer
+from src.models.fclinearmodel import FCLinearModel
+
 from src.waveform import WaveformSynth
 from src.noise_generators import Noise
 
@@ -28,9 +27,12 @@ def run(*args, verbose: bool = False, **kwargs):
         A4=A4,
     )
     
-    loss = nn.MSELoss()
+    model = FCLinearModel(buffer_size)
+    criterion = nn.MSELoss()
+    optimizer = optim.Adam(model.parameters(), lr=0.001)
 
-    trainer = Trainer(FCLinearModel(buffer_size), nn.MSELoss())
+    trainer = Trainer(FCLinearModel(buffer_size), criterion, optimizer)
+
     logger.info("starting training")
     stamp = time.perf_counter()
     history = trainer.train(6, dataset)

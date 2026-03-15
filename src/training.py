@@ -8,13 +8,18 @@ from src.utils import current_device
 
 
 class Trainer:
+    MODEL_KEY = "model_state"
+    OPTIMIZER_KEY = "optimizer_state"
+
     def __init__(self, model: nn.Module, criterion, optimizer):
         self.model = model
-        self.criterion = criterion  # nn.MSELoss()
+        self.criterion = criterion
         self.optimizer = optimizer
 
-    # optim.Adam(self.model.parameters(), lr=0.001)
-
+    def load_from_state(self, model_path: Path):
+        checkpoint = torch.load(model_path)
+        self.model.load_state_dict(checkpoint[self.MODEL_KEY])
+        self.optimizer.load_state_dict(checkpoint[self.OPTIMIZER_KEY])
 
     def _train_one_epoch(self, data_loader: DataLoader):
         self.model.train()
@@ -47,13 +52,15 @@ class Trainer:
         self,
         nb_epoch: int,
         dataset: Dataset,
+        *,
+        batch_size: int = 512,
         store_history: bool = True,
         log_epochs: int = 5,
         model_path: Path = Path("models", "model.pth"),
     ):
         data_loader = DataLoader(
             dataset,
-            batch_size=512,
+            batch_size=batch_size,
             shuffle=True,
             generator=torch.Generator(current_device),
         )
@@ -83,9 +90,8 @@ class Trainer:
             logger.info("Interrupted — saving current model state...")
             torch.save(
                 {
-                    "epoch": epoch,
-                    "model_state": self.model.state_dict(),
-                    "optimizer_state": self.optimizer.state_dict(),
+                    self.MODEL_KEY: self.model.state_dict(),
+                    self.OPTIMIZER_KEY: self.optimizer.state_dict(),
                 },
                 model_path,
             )
