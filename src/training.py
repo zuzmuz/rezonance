@@ -1,66 +1,92 @@
+from pathlib import Path
 import torch
 import torch.nn as nn
-import torch.optim as optim
 from torch.utils.data import Dataset, DataLoader
+
+from src.logger import logger
 from src.utils import current_device
-
-class FCModel(nn.Module):
-    def __init__(self, buffer_size: int):
-        super(FCModel, self).__init__()
-
-        self.model = nn.Sequential(
-            nn.Linear(buffer_size, 512),
-            nn.Tanh(),
-            nn.Linear(512, 512),
-            nn.Tanh(),
-            nn.Linear(512, 256),
-            nn.Tanh(),
-            nn.Linear(256, 256),
-            nn.Tanh(),
-            nn.Linear(256, 128),
-            nn.Tanh(),
-            nn.Linear(128, 128),
-            nn.Tanh(),
-            nn.Linear(128, 1),
-        )
-
-    def forward(self, X):
-        return self.model(X).squeeze(1)
 
 
 class Trainer:
-    def __init__(self, model):
+    def __init__(self, model: nn.Module, criterion, optimizer):
         self.model = model
-        self.criterion = nn.MSELoss()
-        self.optimizer = optim.Adam(self.model.parameters(), lr=0.001)
+        self.criterion = criterion  # nn.MSELoss()
+        self.optimizer = optimizer
 
-    def train(self, nb_epoch: int, dataset: Dataset):
+    # optim.Adam(self.model.parameters(), lr=0.001)
+
+
+    def _train_one_epoch(self, data_loader: DataLoader):
+        self.model.train()
+        total_loss = 0
+        for batch_X, batch_y in data_loader:
+            hat_y = self.model(batch_X)
+            loss = self.criterion(hat_y, batch_y)
+
+            # adjusting parameters in training phase
+            self.optimizer.zero_grad()
+            loss.backward()
+            self.optimizer.step()
+
+            total_loss += loss.item()
+
+        return total_loss / len(data_loader)
+
+    def _validate_one_epoch(self, data_loader: DataLoader):
+        self.model.eval()
+        total_loss = 0
+        with torch.no_grad():
+            for batch_X, batch_y in data_loader:
+                hat_y = self.model(batch_X)
+                loss = self.criterion(hat_y, batch_y)
+                total_loss += loss.item()
+
+        return total_loss / len(data_loader)
+
+    def train(
+        self,
+        nb_epoch: int,
+        dataset: Dataset,
+        store_history: bool = True,
+        log_epochs: int = 5,
+        model_path: Path = Path("models", "model.pth"),
+    ):
         data_loader = DataLoader(
             dataset,
             batch_size=512,
             shuffle=True,
             generator=torch.Generator(current_device),
         )
-        history = []
-        for epoch in range(nb_epoch):
-            self.model.train()
-            epoch_loss = 0
-            for batch_X, batch_y in data_loader:
-                self.optimizer.zero_grad()
-                hat_y = self.model.forward(batch_X)
-                # print(f"{batch_X.shape=} {batch_y.shape=} {hat_y.shape=}")
-                loss = self.criterion(hat_y, batch_y)
-                loss.backward()
-                self.optimizer.step()
 
-                epoch_loss += loss.item()
-                # epoch_accuracy += accuracy_score(
-                #     batch_y.detach().numpy(),
-                #     hat_y.detach().numpy().argmax(axis=1)
-                # )
-            history.append(epoch_loss / len(data_loader))
-            if (epoch + 1) % 20 == 0:
-                print(
-                    f"Epoch {epoch + 1}: Mean Squared Error = {history[-1]:.5f}"
+        self.train_history = []
+        self.validation_history = []
+
+        epoch = 0
+        try:
+            for epoch in range(nb_epoch):
+                train_loss = self._train_one_epoch(data_loader)
+                validation_loss = self._validate_one_epoch(
+                    data_loader
                 )
-        return history
+
+                if store_history:
+                    self.train_history.append(train_loss)
+                    self.validation_history.append(validation_loss)
+                if log_epochs > 0 and (epoch + 1) % log_epochs == 0:
+                    logger.info(
+                        f"Epoch {epoch + 1}:"
+                        f"\n\tTraining Loss = {train_loss:.5f}"
+                        f"\n\tValidation Loss = {validation_loss:.5f}"
+                    )
+
+        except KeyboardInterrupt:
+            logger.info("Interrupted — saving current model state...")
+            torch.save(
+                {
+                    "epoch": epoch,
+                    "model_state": self.model.state_dict(),
+                    "optimizer_state": self.optimizer.state_dict(),
+                },
+                model_path,
+            )
+            logger.info(f"Saved to {model_path}")

@@ -1,15 +1,14 @@
 import logging
 import time
 import torch
-import numpy as np
+import torch.nn as nn
+import torch.optim as optim
 import matplotlib.pyplot as plt
 from src.logger import logger
-from src.dataset import (
-    NoisySineWaveformDataset,
-    RandomTimbralDataset,
-)
+from src.train_dataset import RandomTimbralDataset
+from src.real_dataset import NSynthDataset
 from src.training import (
-    FCModel,
+    FCLinearModel,
     Trainer,
 )
 from src.waveform import WaveformSynth
@@ -28,8 +27,10 @@ def run(*args, verbose: bool = False, **kwargs):
         buffer_size=buffer_size,
         A4=A4,
     )
+    
+    loss = nn.MSELoss()
 
-    trainer = Trainer(FCModel(buffer_size))
+    trainer = Trainer(FCLinearModel(buffer_size), nn.MSELoss())
     logger.info("starting training")
     stamp = time.perf_counter()
     history = trainer.train(6, dataset)
