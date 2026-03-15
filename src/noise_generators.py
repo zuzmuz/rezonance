@@ -18,7 +18,7 @@ class NoiseSynth:
         self.power = power
         self.filter = filter
 
-    def __call__(self, buffer_size: int) -> Tensor:
+    def generate(self, buffer_size: int) -> Tensor:
         """
         Generate a noise buffer of given size.
         Parameters:
@@ -53,9 +53,9 @@ class CompositeNoiseSynth(NoiseSynth):
     def __init__(self, synths: list[NoiseSynth]):
         self.synths = synths
 
-    def __call__(self, buffer_size: int) -> Tensor:
+    def generate(self, buffer_size: int) -> Tensor:
         return torch.stack(
-            [synth(buffer_size) for synth in self.synths]
+            [synth.generate(buffer_size) for synth in self.synths]
         ).sum(dim=0)
 
     def __add__(self, other: NoiseSynth) -> NoiseSynth:
@@ -115,7 +115,7 @@ class Noise:
         def __init__(self, power: Number):
             self.power = power
 
-        def __call__(self, buffer_size: int) -> Tensor:
+        def generate(self, buffer_size: int) -> Tensor:
             return self.power * self.generate_white_noise(buffer_size)
 
     @classmethod

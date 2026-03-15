@@ -33,7 +33,7 @@ def run(*args, **kwargs):
     for idx, (synth, title) in enumerate(noises):
         plt.subplot(len(noises), 1, idx + 1)
         plt.title(title)
-        noise = synth(buffer_size)
+        noise = synth.generate(buffer_size)
         print(f'power of noise "{title}": {noise.std()}')
         plt.plot(
             (waveform + noise).cpu().detach().numpy(),

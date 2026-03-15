@@ -1,6 +1,7 @@
 from pathlib import Path
 import torch
-import torch.nn as nn
+from torch.nn import Module
+from torch.optim import Optimizer
 from torch.utils.data import Dataset, DataLoader
 
 from src.logger import logger
@@ -8,10 +9,25 @@ from src.utils import current_device
 
 
 class Trainer:
+    """
+    Model trainer class, create one with a model, loss function and optimzer.
+    Will train model with validation
+    Parameters:
+        model (Module): the model to train
+        criterion (Loss): a loss function
+        optimizer (Optimizer): the loss optimizer
+
+    """
+
     MODEL_KEY = "model_state"
     OPTIMIZER_KEY = "optimizer_state"
 
-    def __init__(self, model: nn.Module, criterion, optimizer):
+    def __init__(
+        self,
+        model: Module,
+        criterion: Module,
+        optimizer: Optimizer,
+    ):
         self.model = model
         self.criterion = criterion
         self.optimizer = optimizer
@@ -51,19 +67,29 @@ class Trainer:
     def train(
         self,
         nb_epoch: int,
-        dataset: Dataset,
+        train_dataset: Dataset,
+        validation_dataset: Dataset | None = None,
         *,
         batch_size: int = 512,
         store_history: bool = True,
         log_epochs: int = 5,
         model_path: Path = Path("models", "model.pth"),
     ):
-        data_loader = DataLoader(
-            dataset,
+        train_data_loader = DataLoader(
+            train_dataset,
             batch_size=batch_size,
             shuffle=True,
             generator=torch.Generator(current_device),
         )
+
+        validation_data_loader = None
+        if validation_dataset:
+            validation_data_loader = DataLoader(
+                validation_dataset,
+                batch_size=batch_size,
+                shuffle=True,
+                generator=torch.Generator(current_device),
+            )
 
         self.train_history = []
         self.validation_history = []
@@ -71,14 +97,19 @@ class Trainer:
         epoch = 0
         try:
             for epoch in range(nb_epoch):
-                train_loss = self._train_one_epoch(data_loader)
-                validation_loss = self._validate_one_epoch(
-                    data_loader
-                )
+                train_loss = self._train_one_epoch(train_data_loader)
+                validation_loss = None
+                if validation_data_loader:
+                    validation_loss = self._validate_one_epoch(
+                        validation_data_loader
+                    )
 
                 if store_history:
                     self.train_history.append(train_loss)
-                    self.validation_history.append(validation_loss)
+                    if validation_loss:
+                        self.validation_history.append(
+                            validation_loss
+                        )
                 if log_epochs > 0 and (epoch + 1) % log_epochs == 0:
                     logger.info(
                         f"Epoch {epoch + 1}:"
@@ -88,6 +119,7 @@ class Trainer:
 
         except KeyboardInterrupt:
             logger.info("Interrupted — saving current model state...")
+        finally:
             torch.save(
                 {
                     self.MODEL_KEY: self.model.state_dict(),
