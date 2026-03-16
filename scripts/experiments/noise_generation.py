@@ -3,8 +3,7 @@ import matplotlib.pyplot as plt
 
 from rezonance.noise_generators import Noise, NoiseSynth
 
-if __name__ == '__main__':
-
+def main():
     buffer_size = 1024
 
     plt.figure()
@@ -36,3 +35,7 @@ if __name__ == '__main__':
         )
 
     plt.show()
+
+
+if __name__ == '__main__':
+    main()

@@ -142,6 +142,16 @@ class InstrumentSynth:
     def generate(
         self, pitches: Tensor, *, per_pitch: int = 1
     ) -> Tensor:
+        """
+        Will generate signals based on the instrument timbre/formant,
+        following the power and phase distribution.
+        Parameters:
+            pitches: (Tensor) one dimensional tensor that contains the pitches for which to generate signals for
+            per_pitch: (int) number of signals to generate per pitch, usually phase or power distributions have a random element, so multiple signals generated per pitch might not have the same properties
+        Returns:
+            Tensor of size (pitches.size(0) * per_pitch, buffer_size)
+        """
+
         ranks = get_rank_of_pitch(
             pitches, sample_rate=self.sample_rate, A4=self.A4
         ).floor()
