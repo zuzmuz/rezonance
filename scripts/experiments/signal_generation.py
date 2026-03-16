@@ -1,3 +1,8 @@
+"""
+Visualize different synthetic waveform generation.
+We use the instrumentSynth class to generate signals following a certain formant or timbre.
+The timbre is defined by the instrumentSynth class.
+"""
 import matplotlib.pyplot as plt
 
 import torch
@@ -7,8 +12,6 @@ from rezonance.waveform import Instrument
 
 
 def main():
-
-    plt.figure()
 
     instruments = [
         (

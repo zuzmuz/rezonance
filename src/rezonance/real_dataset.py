@@ -51,7 +51,7 @@ class NSynthDataset(Dataset):
             signal = signal.mean(0)
         else:
             signal = signal[0]
-
+        signal /= signal.std()
         return signal[
             (2 + idx % self.element_per_file) * self.buffer_size : (
                 2 + idx % self.element_per_file + 1

@@ -1,3 +1,6 @@
+"""
+This scripts verifies and plots the different noise function generations
+"""
 import numpy as np
 import matplotlib.pyplot as plt
 

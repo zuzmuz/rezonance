@@ -14,6 +14,9 @@ class Augmentation:
         self.chance = chance
 
     def __call__(self, input: Tensor) -> Tensor:
+        """
+        Applies augmentation by chance
+        """
         if torch.rand(1) < self.chance:
             return self.augmentation(input)
         return input
