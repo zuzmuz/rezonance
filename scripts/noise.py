@@ -1,16 +1,16 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-from src.noise_generators import Noise, NoiseSynth
+from rezonance.noise_generators import Noise, NoiseSynth
 
+if __name__ == '__main__':
 
-def run(*args, **kwargs):
     buffer_size = 1024
 
     plt.figure()
 
     noises: list[tuple[str, str, NoiseSynth]] = [
-        ("white", "white", Noise.white(1.0)),
+        ("white", "black", Noise.white(1.0)),
         ("pink", "hotpink", Noise.pink(1.0)),
         ("brown", "brown", Noise.brown(1.0)),
         ("blue", "blue", Noise.blue(1.0)),
@@ -27,7 +27,7 @@ def run(*args, **kwargs):
     for idx, (title, color, synth) in enumerate(noises):
         plt.subplot(noises_len, 2, idx * 2 + 1)
         plt.title(title)
-        noise = synth(buffer_size).cpu().detach().numpy()
+        noise = synth.generate(buffer_size).cpu().detach().numpy()
         plt.plot(noise, color=color, linewidth=0.5)
         plt.subplot(noises_len, 2, idx * 2 + 2)
         plt.title(f"{title} fft")

@@ -10,7 +10,7 @@ from torch.utils.data import Dataset
 import torchaudio
 from torchcodec.decoders import AudioDecoder
 
-from src.logger import logger
+from rezonance.logger import logger
 
 
 class NSynthDataset(Dataset):

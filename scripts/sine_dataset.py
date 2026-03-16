@@ -1,10 +1,9 @@
 import matplotlib.pyplot as plt
+from rezonance.waveform import Instrument
+from rezonance.train_dataset import InstrumentSynthDataset
+from scripts.defaults import configure
 
-from src.waveform import Instrument
-from src.train_dataset import InstrumentSynthDataset
-
-
-def run(*args, **kwargs):
+def run():
     sample_rate = 16_000.0
     buffer_size = 1024
     A4 = 440.0
@@ -28,3 +27,8 @@ def run(*args, **kwargs):
         plt.plot(element[0].cpu().detach().numpy())
 
     plt.show()
+
+
+if __name__ == '__main__':
+    configure()
+    run()

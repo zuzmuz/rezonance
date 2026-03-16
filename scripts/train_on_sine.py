@@ -7,12 +7,12 @@ import torch.optim as optim
 from torch.utils.data import ConcatDataset
 import matplotlib.pyplot as plt
 
-from src.logger import logger
-from src.train_dataset import InstrumentSynthDataset
-from src.real_dataset import NSynthDataset
-from src.training import Trainer
-from src.models.fclinearmodel import FCLinearModel
-from src.waveform import Instrument
+from rezonance.logger import logger
+from rezonance.train_dataset import InstrumentSynthDataset
+from rezonance.real_dataset import NSynthDataset
+from rezonance.training import Trainer
+from rezonance.models.fclinearmodel import FCLinearModel
+from rezonance.waveform import Instrument
 
 
 def run(*args, verbose: bool = False, **kwargs):

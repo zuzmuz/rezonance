@@ -1,8 +1,8 @@
 import torch
 import matplotlib.pyplot as plt
-from src.utils import freq_from_pitch
-from src.waveform import Instrument
-from src.train_dataset import InstrumentSynthDataset
+from rezonance.utils import freq_from_pitch
+from rezonance.waveform import Instrument
+from rezonance.train_dataset import InstrumentSynthDataset
 
 
 def run(*args, **kwargs):

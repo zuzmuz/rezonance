@@ -16,6 +16,9 @@ dependencies = [
     'sounddevice',
 ]
 
+[tool.uv]
+package = true
+
 [tool.ruff]
 exclude = [".venv"]
 line-length = 70

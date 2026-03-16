@@ -4,8 +4,8 @@ from torch import Tensor, mul
 from torch.types import Number
 from typing import Callable
 
-from src.utils import freq_from_pitch, get_rank_of_pitch
-from src.logger import logger
+from rezonance.utils import freq_from_pitch, get_rank_of_pitch
+from rezonance.logger import logger
 
 
 class WaveformSynth:

@@ -4,11 +4,11 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import matplotlib.pyplot as plt
-from src.logger import logger
-from src.train_dataset import InstrumentSynthDataset
-from src.real_dataset import NSynthDataset
-from src.training import Trainer
-from src.models.fclinearmodel import FCLinearModel
+from rezonance.logger import logger
+from rezonance.train_dataset import InstrumentSynthDataset
+from rezonance.real_dataset import NSynthDataset
+from rezonance.training import Trainer
+from rezonance.models.fclinearmodel import FCLinearModel
 
 
 def run(*args, verbose: bool = False, **kwargs):

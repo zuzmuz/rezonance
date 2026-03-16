@@ -3,12 +3,12 @@ from torch.types import Number
 from torch import Tensor
 from torch.utils.data import Dataset
 
-from src.logger import logger
-from src.utils import (
+from rezonance.logger import logger
+from rezonance.utils import (
     pitch_from_freq,
     current_device,
 )
-from src.waveform import InstrumentSynth
+from rezonance.waveform import InstrumentSynth
 
 
 class InstrumentSynthDataset(Dataset):

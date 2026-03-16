@@ -1,7 +1,7 @@
 import torch
 import matplotlib.pyplot as plt
 
-from src.waveform import Instrument
+from rezonance.waveform import Instrument
 
 
 def run(*args, **kwargs):

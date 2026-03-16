@@ -2,9 +2,9 @@ import torch
 import numpy as np
 import matplotlib.pyplot as plt
 
-from src.waveform import Timbre, WaveformSynth
-from src.dataset import RandomTimbralDataset
-from src.utils import (
+from rezonance.waveform import Timbre, WaveformSynth
+from rezonance.dataset import RandomTimbralDataset
+from rezonance.utils import (
     get_rank_of_pitch,
     freq_from_pitch,
     get_pitch_of_rank,

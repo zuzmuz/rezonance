@@ -4,8 +4,8 @@ from torch.nn import Module
 from torch.optim import Optimizer
 from torch.utils.data import Dataset, DataLoader
 
-from src.logger import logger
-from src.utils import current_device
+from logger import logger
+from utils import current_device
 
 
 class Trainer:

@@ -3,8 +3,8 @@ import matplotlib.pyplot as plt
 import importlib
 import pkgutil
 from argparse import ArgumentParser
-from src.logger import logger
-from src.utils import current_device
+from logger import logger
+from utils import current_device
 
 
 def main():

@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 
-from src.noise_generators import Noise
-from src.dataset import NoisySineWaveformDataset
+from rezonance.noise_generators import Noise
+from rezonance.dataset import NoisySineWaveformDataset
 
 def run(*args, **kwargs):
     sample_rate = 16_000.0

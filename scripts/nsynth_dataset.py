@@ -1,10 +1,10 @@
 from pathlib import Path
 import torch
 import matplotlib.pyplot as plt
-from src.logger import logger
-from src.utils import freq_from_pitch
-from src.real_dataset import NSynthDataset
-from src.waveform import Instrument
+from rezonance.logger import logger
+from rezonance.utils import freq_from_pitch
+from rezonance.real_dataset import NSynthDataset
+from rezonance.waveform import Instrument
 
 
 def run(*args, **kwargs):
