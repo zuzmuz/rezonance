@@ -1,7 +1,8 @@
 import torch
 import matplotlib.pyplot as plt
 from src.utils import freq_from_pitch
-from src.train_dataset import RandomTimbralDataset
+from src.waveform import Instrument
+from src.train_dataset import InstrumentSynthDataset
 
 
 def run(*args, **kwargs):
@@ -9,11 +10,16 @@ def run(*args, **kwargs):
     buffer_size = 1024
     A4 = 440.0
 
-    dataset = RandomTimbralDataset(
+    dataset = InstrumentSynthDataset(
         3,
         2,
+        instrument=Instrument.random(
+            1.5,
+            sample_rate=sample_rate,
+            buffer_size=buffer_size,
+            A4=A4,
+        ),
         sample_rate=sample_rate,
-        buffer_size=buffer_size,
         A4=A4,
         min_pitch=60,
         max_pitch=70,

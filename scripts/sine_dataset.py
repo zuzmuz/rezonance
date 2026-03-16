@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 
-from src.dataset import SineWaveformDataset
+from src.waveform import Instrument
+from src.train_dataset import InstrumentSynthDataset
 
 
 def run(*args, **kwargs):
@@ -8,11 +9,13 @@ def run(*args, **kwargs):
     buffer_size = 1024
     A4 = 440.0
 
-    dataset = SineWaveformDataset(
-        5,
-        3,
+    dataset = InstrumentSynthDataset(
+        2,
+        2,
+        instrument=Instrument.sine(
+            buffer_size=buffer_size, sample_rate=sample_rate, A4=A4
+        ),
         sample_rate=sample_rate,
-        buffer_size=buffer_size,
         A4=A4,
         min_pitch=60,
         max_pitch=70,
@@ -21,7 +24,7 @@ def run(*args, **kwargs):
     plt.figure()
 
     for idx, element in enumerate(dataset):  # type: ignore
-        plt.subplot(5, 3, idx + 1)
-        plt.plot(element[0].cpu().detach().numpy(), linewidth=0.5)
+        plt.subplot(4, 1, idx + 1)
+        plt.plot(element[0].cpu().detach().numpy())
 
     plt.show()

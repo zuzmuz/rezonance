@@ -69,8 +69,9 @@ class Trainer:
         train_dataset: Dataset,
         validation_dataset: Dataset | None = None,
         *,
-        nb_epoch: int = 1000,
+        nb_epoch: int = 100,
         batch_size: int = 512,
+        validate_every: int = 10,
         store_history: bool = True,
         log_epochs: int = 5,
         model_path: Path = Path("saved_models", "model.pth"),
@@ -115,7 +116,10 @@ class Trainer:
             for epoch in range(nb_epoch):
                 train_loss = self._train_one_epoch(train_data_loader)
                 validation_loss = None
-                if validation_data_loader:
+                if (
+                    validation_data_loader
+                    and (epoch + 1) % validate_every == 0
+                ):
                     validation_loss = self._validate_one_epoch(
                         validation_data_loader
                     )

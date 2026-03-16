@@ -5,13 +5,10 @@ import torch.nn as nn
 import torch.optim as optim
 import matplotlib.pyplot as plt
 from src.logger import logger
-from src.train_dataset import RandomTimbralDataset
+from src.train_dataset import InstrumentSynthDataset
 from src.real_dataset import NSynthDataset
 from src.training import Trainer
 from src.models.fclinearmodel import FCLinearModel
-
-from src.waveform import WaveformSynth
-from src.noise_generators import Noise
 
 
 def run(*args, verbose: bool = False, **kwargs):
@@ -19,7 +16,7 @@ def run(*args, verbose: bool = False, **kwargs):
     buffer_size = 1024
     A4 = 440.0
 
-    train_dataset = RandomTimbralDataset(
+    train_dataset = InstrumentSynthDataset(
         500,
         1000,
         sample_rate=sample_rate,
@@ -39,7 +36,7 @@ def run(*args, verbose: bool = False, **kwargs):
     criterion = nn.MSELoss()
     optimizer = optim.Adam(model.parameters(), lr=0.001)
 
-    trainer = Trainer(FCLinearModel(buffer_size), criterion, optimizer)
+    trainer = Trainer(model, criterion, optimizer)
 
     logger.info("starting training")
     stamp = time.perf_counter()
