@@ -8,10 +8,13 @@ from torch.utils.data import ConcatDataset
 
 from rezonance.logger import logger
 from rezonance.defaults import SAMPLE_RATE, BUFFER_SIZE, A4
+from rezonance.models.convmodel import ConvModel
 from rezonance.waveform import Instrument
 from rezonance.train_dataset import InstrumentSynthDataset
 from rezonance.real_dataset import NSynthDataset
 from rezonance.models.fclinearmodel import FCLinearModel
+from rezonance.augmentation import Augmentation
+from rezonance.noise_generators import Noise
 from rezonance.training import Trainer
 
 
@@ -72,11 +75,24 @@ def main():
         element_per_file=5,
     )
 
-    model = FCLinearModel(BUFFER_SIZE)
+    # model = FCLinearModel(BUFFER_SIZE)
+    model = ConvModel()
     criterion = nn.MSELoss()
     optimizer = optim.Adam(model.parameters(), lr=0.001)
 
-    trainer = Trainer(model, criterion, optimizer, augmentations=[])
+    trainer = Trainer(
+        model,
+        criterion,
+        optimizer,
+        augmentations=[
+            Augmentation.noise(Noise.brown(0.1), chance=0.4),
+            Augmentation.noise(Noise.pink(0.05), chance=0.3),
+            Augmentation.noise(Noise.white(0.05), chance=0.2),
+            Augmentation.mask(50, 0, chance=0.1),
+            Augmentation.scaling(0.8, 1.2, BUFFER_SIZE, chance=0.3),
+            Augmentation.scaling(1.2, 0.8, BUFFER_SIZE, chance=0.3),
+        ],
+    )
 
     logger.info("starting training")
     trainer.train(
@@ -84,6 +100,7 @@ def main():
         validation_dataset,
         log_epochs=2,
         validate_every=10,
+        augment=True
     )
 
     plt.figure()
@@ -98,5 +115,5 @@ def main():
     plt.savefig(Path("figures", "loss.png"))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
