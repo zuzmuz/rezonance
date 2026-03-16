@@ -1,7 +1,8 @@
 from pathlib import Path
+from typing import Callable
 import torch
-from torch.nn import Module
-from torch.optim import Optimizer
+from torch import Tensor, nn, optim
+from torch.types import Number
 from torch.utils.data import Dataset, DataLoader
 
 from rezonance.logger import logger
@@ -24,23 +25,36 @@ class Trainer:
 
     def __init__(
         self,
-        model: Module,
-        criterion: Module,
-        optimizer: Optimizer,
+        model: nn.Module,
+        criterion: nn.Module,
+        optimizer: optim.Optimizer,
+        augmentations: list[Callable[[Tensor], Tensor]],
     ):
         self.model = model
         self.criterion = criterion
         self.optimizer = optimizer
+        self.augmentations = augmentations
 
     def load_from_state(self, model_path: Path):
         checkpoint = torch.load(model_path)
         self.model.load_state_dict(checkpoint[self.MODEL_KEY])
         self.optimizer.load_state_dict(checkpoint[self.OPTIMIZER_KEY])
 
-    def _train_one_epoch(self, data_loader: DataLoader):
+    def _augment_batch(self, batch_X) -> Tensor:
+        for augmention in self.augmentations:
+            if torch.rand(1) < 0.3:
+                batch_X = augmention(batch_X)
+        return batch_X
+
+
+    def _train_one_epoch(
+        self, data_loader: DataLoader, *, augment: bool = False
+    ) -> Number:
         self.model.train()
         total_loss = 0
         for batch_X, batch_y in data_loader:
+            if augment:
+                batch_X = self._augment_batch(batch_X)
             hat_y = self.model(batch_X)
             loss = self.criterion(hat_y, batch_y)
 
@@ -53,7 +67,7 @@ class Trainer:
 
         return total_loss / len(data_loader)
 
-    def _validate_one_epoch(self, data_loader: DataLoader):
+    def _validate_one_epoch(self, data_loader: DataLoader) -> Number:
         self.model.eval()
         total_loss = 0
         with torch.no_grad():
@@ -73,6 +87,7 @@ class Trainer:
         batch_size: int = 512,
         validate_every: int = 10,
         store_history: bool = True,
+        augment: bool = False,
         log_epochs: int = 5,
         model_path: Path = Path("saved_models", "model.pth"),
     ):
