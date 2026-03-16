@@ -46,7 +46,6 @@ class Trainer:
                 batch_X = augmention(batch_X)
         return batch_X
 
-
     def _train_one_epoch(
         self, data_loader: DataLoader, *, augment: bool = False
     ) -> Number:
