@@ -76,7 +76,7 @@ def main():
     criterion = nn.MSELoss()
     optimizer = optim.Adam(model.parameters(), lr=0.001)
 
-    trainer = Trainer(model, criterion, optimizer)
+    trainer = Trainer(model, criterion, optimizer, augmentations=[])
 
     logger.info("starting training")
     trainer.train(
