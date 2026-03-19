@@ -13,10 +13,9 @@ from rezonance.waveform import Instrument
 from rezonance.train_dataset import InstrumentSynthDataset
 from rezonance.real_dataset import NSynthDataset
 from rezonance.models.fclinearmodel import FCLinearModel
-from rezonance.augmentation import Augmentation
 from rezonance.noise_generators import Noise
 from rezonance.training import Trainer
-
+from rezonance import transforms
 
 def main():
 
@@ -30,6 +29,17 @@ def main():
             InstrumentSynthDataset(
                 500,
                 2000,
+                transform=transforms.random_choice(
+                    transforms.none(),
+                    transforms.noise(Noise.brown(0.1) + Noise.violet(0.02)),
+                    transforms.compose(
+                        transforms.noise(Noise.brown(0.1) + Noise.violet(0.02)),
+                        transforms.scaling(1, 0.8, BUFFER_SIZE)
+                    ),
+                    transforms.noise(Noise.white(0.05)),
+                    transforms.scaling(1, 0.5, BUFFER_SIZE),
+                    transforms.mask(50, 0)
+                ),
                 instrument=Instrument.random(
                     1.5,
                     buffer_size=BUFFER_SIZE,
@@ -42,6 +52,10 @@ def main():
             InstrumentSynthDataset(
                 200,
                 500,
+                transform=transforms.random_choice(
+                    transforms.none(),
+                    transforms.noise(Noise.brown(0.1))
+                ),
                 instrument=Instrument.random(
                     2,
                     buffer_size=BUFFER_SIZE,
@@ -54,6 +68,7 @@ def main():
             InstrumentSynthDataset(
                 100,
                 100,
+                transform=transforms.none(),
                 instrument=Instrument.random(
                     1,
                     buffer_size=BUFFER_SIZE,
@@ -84,14 +99,15 @@ def main():
         model,
         criterion,
         optimizer,
-        augmentations=[
-            Augmentation.noise(Noise.brown(0.1), chance=0.4),
-            Augmentation.noise(Noise.pink(0.05), chance=0.3),
-            Augmentation.noise(Noise.white(0.05), chance=0.2),
-            Augmentation.mask(50, 0, chance=0.1),
-            Augmentation.scaling(0.8, 1.2, BUFFER_SIZE, chance=0.3),
-            Augmentation.scaling(1.2, 0.8, BUFFER_SIZE, chance=0.3),
-        ],
+        # augmentations=[
+        #     Augmentation.noise(Noise.brown(0.1), chance=0.4),
+        #     Augmentation.noise(Noise.pink(0.05), chance=0.3),
+        #     Augmentation.noise(Noise.white(0.05), chance=0.1),
+        #     Augmentation.noise(Noise.violet(0.01), chance=0.01),
+        #     Augmentation.mask(50, 0, chance=0.05),
+        #     Augmentation.scaling(0.8, 1.2, BUFFER_SIZE, chance=0.1),
+        #     Augmentation.scaling(1.2, 0.8, BUFFER_SIZE, chance=0.3),
+        # ],
     )
 
     logger.info("starting training")
@@ -100,7 +116,6 @@ def main():
         validation_dataset,
         log_epochs=2,
         validate_every=10,
-        augment=True
     )
 
     plt.figure()

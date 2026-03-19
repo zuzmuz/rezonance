@@ -9,6 +9,7 @@ from rezonance.utils import (
     current_device,
 )
 from rezonance.waveform import InstrumentSynth
+from rezonance.transforms import Transform
 
 
 class InstrumentSynthDataset(Dataset):
@@ -17,6 +18,7 @@ class InstrumentSynthDataset(Dataset):
         nb_pitches: int,
         nb_harm_dist: int,
         *,
+        transform: Transform,
         instrument: InstrumentSynth,
         sample_rate: Number = 16_000,
         A4: Number = 440,
@@ -28,6 +30,7 @@ class InstrumentSynthDataset(Dataset):
         if seed:
             torch.manual_seed(seed)
 
+        self.transform = transform
         self.instrument = instrument
 
         max_possible_pitch = pitch_from_freq(
@@ -67,6 +70,6 @@ class InstrumentSynthDataset(Dataset):
     def __getitem__(self, idx):
         pitch = self.pitches[idx // self.nb_harm_dist]
 
-        waveform = self.data[idx]
+        waveform = self.transform(self.data[idx])
 
         return waveform, pitch
