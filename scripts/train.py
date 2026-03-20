@@ -25,76 +25,64 @@ def main():
     logger.info(f"Using device: {torch.get_default_device()}")
 
     logger.info("Generating train synthetic dataset")
-    train_dataset = InstrumentSynthDataset(
-        10,
-        12,
-        instrument=Instrument.random(
-            1.5,
-            buffer_size=BUFFER_SIZE,
-            sample_rate=SAMPLE_RATE,
-            A4=A4,
-        ),
-        transform=transforms.none(),
-        sample_rate=SAMPLE_RATE,
-        A4=A4,
+    
+    train_dataset = ConcatDataset(
+        [
+            InstrumentSynthDataset(
+                300,
+                1000,
+                transform=transforms.random_choice(
+                    transforms.none(),
+                    transforms.noise(Noise.brown(0.1) + Noise.violet(0.02)),
+                    transforms.compose(
+                        transforms.noise(Noise.brown(0.1) + Noise.violet(0.02)),
+                        transforms.scaling(1, 0.8, BUFFER_SIZE)
+                    ),
+                    transforms.noise(Noise.white(0.05)),
+                    transforms.scaling(1, 0.5, BUFFER_SIZE),
+                    transforms.mask(50, 0)
+                ),
+                instrument=Instrument.random(
+                    1.5,
+                    buffer_size=BUFFER_SIZE,
+                    sample_rate=SAMPLE_RATE,
+                    A4=A4,
+                ),
+                sample_rate=SAMPLE_RATE,
+                A4=A4,
+            ),
+            InstrumentSynthDataset(
+                200,
+                500,
+                transform=transforms.random_choice(
+                    transforms.none(),
+                    transforms.noise(Noise.brown(0.1)),
+                    transforms.scaling(1, 0.7, BUFFER_SIZE)
+                ),
+                instrument=Instrument.random(
+                    2,
+                    buffer_size=BUFFER_SIZE,
+                    sample_rate=SAMPLE_RATE,
+                    A4=A4,
+                ),
+                sample_rate=SAMPLE_RATE,
+                A4=A4,
+            ),
+            InstrumentSynthDataset(
+                100,
+                200,
+                transform=transforms.none(),
+                instrument=Instrument.random(
+                    1,
+                    buffer_size=BUFFER_SIZE,
+                    sample_rate=SAMPLE_RATE,
+                    A4=A4,
+                ),
+                sample_rate=SAMPLE_RATE,
+                A4=A4,
+            ),
+        ]
     )
-    # train_dataset = ConcatDataset(
-    #     [
-    #         InstrumentSynthDataset(
-    #             500,
-    #             2000,
-    #             transform=transforms.random_choice(
-    #                 transforms.none(),
-    #                 transforms.noise(Noise.brown(0.1) + Noise.violet(0.02)),
-    #                 transforms.compose(
-    #                     transforms.noise(Noise.brown(0.1) + Noise.violet(0.02)),
-    #                     transforms.scaling(1, 0.8, BUFFER_SIZE)
-    #                 ),
-    #                 transforms.noise(Noise.white(0.05)),
-    #                 transforms.scaling(1, 0.5, BUFFER_SIZE),
-    #                 transforms.mask(50, 0)
-    #             ),
-    #             instrument=Instrument.random(
-    #                 1.5,
-    #                 buffer_size=BUFFER_SIZE,
-    #                 sample_rate=SAMPLE_RATE,
-    #                 A4=A4,
-    #             ),
-    #             sample_rate=SAMPLE_RATE,
-    #             A4=A4,
-    #         ),
-    #         InstrumentSynthDataset(
-    #             200,
-    #             500,
-    #             transform=transforms.random_choice(
-    #                 transforms.none(),
-    #                 transforms.noise(Noise.brown(0.1)),
-    #                 transforms.scaling(1, 0.7, BUFFER_SIZE)
-    #             ),
-    #             instrument=Instrument.random(
-    #                 2,
-    #                 buffer_size=BUFFER_SIZE,
-    #                 sample_rate=SAMPLE_RATE,
-    #                 A4=A4,
-    #             ),
-    #             sample_rate=SAMPLE_RATE,
-    #             A4=A4,
-    #         ),
-    #         InstrumentSynthDataset(
-    #             100,
-    #             100,
-    #             transform=transforms.none(),
-    #             instrument=Instrument.random(
-    #                 1,
-    #                 buffer_size=BUFFER_SIZE,
-    #                 sample_rate=SAMPLE_RATE,
-    #                 A4=A4,
-    #             ),
-    #             sample_rate=SAMPLE_RATE,
-    #             A4=A4,
-    #         ),
-    #     ]
-    # )
 
     logger.info("Creating real validation dataset")
 
