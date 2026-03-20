@@ -29,7 +29,7 @@ def main():
     train_dataset = ConcatDataset(
         [
             InstrumentSynthDataset(
-                300,
+                190,
                 1000,
                 transform=transforms.random_choice(
                     transforms.none(),
@@ -52,7 +52,7 @@ def main():
                 A4=A4,
             ),
             InstrumentSynthDataset(
-                200,
+                150,
                 500,
                 transform=transforms.random_choice(
                     transforms.none(),
@@ -69,8 +69,8 @@ def main():
                 A4=A4,
             ),
             InstrumentSynthDataset(
-                100,
-                200,
+                110,
+                300,
                 transform=transforms.none(),
                 instrument=Instrument.random(
                     1,
@@ -108,7 +108,7 @@ def main():
     trainer.train(
         train_dataset,
         validation_dataset,
-        log_epochs=2,
+        log_epochs=1,
         validate_every=10,
     )
 

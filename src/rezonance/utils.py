@@ -5,8 +5,8 @@ from torch import Tensor
 from torch.types import Number
 
 
-# current_device = "mps"
-current_device = "cpu"
+current_device = "mps"
+# current_device = "cpu"
 
 
 def freq_from_pitch(

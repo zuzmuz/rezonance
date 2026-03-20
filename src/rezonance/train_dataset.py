@@ -3,6 +3,7 @@ from torch.types import Number
 from torch import Tensor
 from torch.utils.data import Dataset
 
+from rezonance import waveform
 from rezonance.logger import logger
 from rezonance.utils import (
     pitch_from_freq,
@@ -79,5 +80,6 @@ class InstrumentSynthDataset(Dataset):
         pitch = self.pitches[idx // self.nb_harm_dist]
 
         waveform = self.transform(self.data[idx])
+        # waveform = self.data[idx]
 
         return waveform, pitch
