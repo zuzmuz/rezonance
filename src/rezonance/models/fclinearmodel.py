@@ -21,4 +21,4 @@ class FCLinearModel(nn.Module):
         )
 
     def forward(self, X):
-        return self.model(X).squeeze(1)
+        return self.model(X)

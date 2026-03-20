@@ -49,20 +49,28 @@ class InstrumentSynthDataset(Dataset):
                 sample_rate,
             )
 
+        logger.debug(f"Generating pitches")
         self.pitches = torch.linspace(
             min_pitch, max_pitch, nb_pitches, dtype=torch.float32
         )
 
+        logger.debug(f"Generated pitches with size {self.pitches.size(0)}")
+
         self.nb_harm_dist = nb_harm_dist
 
+        logger.debug("Generating signals")
         self.data = self.instrument.generate(
             self.pitches,
             per_pitch=nb_harm_dist,
         )
+        logger.debug(f"Generated signals with size = {self.data.size(0)}")
 
         self.data /= self.data.std(dim=1, keepdim=True)
-
+        
+        logger.debug("Moving tensor to device")
         self.data.to(current_device)
+
+        logger.debug("Done generating data")
 
     def __len__(self):
         return self.data.size(0)

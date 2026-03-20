@@ -1,4 +1,7 @@
 from torch import nn
+from torch import Tensor
+
+from rezonance.logger import logger
 
 
 class ConvModel(nn.Module):
@@ -41,7 +44,8 @@ class ConvModel(nn.Module):
             nn.Dropout(0.25),
         )
 
-    def forward(self, x):
+    def forward(self, x: Tensor):
+        x = x.unsqueeze(1)
         x = self.conv1(x)
         x = self.conv2(x)
         x = self.conv3(x)
@@ -49,4 +53,4 @@ class ConvModel(nn.Module):
         x = self.conv5(x)
         x = self.conv6(x)
         x = x.flatten(1)
-        return self.fc(x)
+        return self.fc(x).squeeze(1)
