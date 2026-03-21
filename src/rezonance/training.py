@@ -20,9 +20,6 @@ class Trainer:
 
     """
 
-    MODEL_KEY = "model_state"
-    OPTIMIZER_KEY = "optimizer_state"
-
     def __init__(
         self,
         model: nn.Module,
@@ -32,11 +29,6 @@ class Trainer:
         self.model = model
         self.criterion = criterion
         self.optimizer = optimizer
-
-    def load_from_state(self, model_path: Path):
-        checkpoint = torch.load(model_path)
-        self.model.load_state_dict(checkpoint[self.MODEL_KEY])
-        self.optimizer.load_state_dict(checkpoint[self.OPTIMIZER_KEY])
 
     def _train_one_epoch(self, data_loader: DataLoader) -> Number:
         logger.debug("Training epoch")
@@ -123,43 +115,28 @@ class Trainer:
         self.validation_history = []
 
         epoch = 0
-        try:
-            for epoch in range(nb_epoch):
-                train_loss = self._train_one_epoch(train_data_loader)
-                validation_loss = None
-                if (
+        for epoch in range(nb_epoch):
+            train_loss = self._train_one_epoch(train_data_loader)
+            validation_loss = None
+            if (
+                validation_data_loader
+                and (epoch + 1) % validate_every == 0
+            ):
+                validation_loss = self._validate_one_epoch(
                     validation_data_loader
-                    and (epoch + 1) % validate_every == 0
-                ):
-                    validation_loss = self._validate_one_epoch(
-                        validation_data_loader
-                    )
+                )
 
-                if store_history:
-                    self.train_history.append(train_loss)
-                    if validation_loss:
-                        self.validation_history.append(
-                            validation_loss
-                        )
-                if log_epochs > 0 and (epoch + 1) % log_epochs == 0:
-                    logger.info(
-                        f"Epoch {epoch + 1}:"
-                        + f"\n\tTraining Loss = {train_loss:.5f}"
-                        + (
-                            f"\n\tValidation Loss = {validation_loss:.5f}"
-                            if validation_loss
-                            else ""
-                        )
+            if store_history:
+                self.train_history.append(train_loss)
+                if validation_loss:
+                    self.validation_history.append(validation_loss)
+            if log_epochs > 0 and (epoch + 1) % log_epochs == 0:
+                logger.info(
+                    f"Epoch {epoch + 1}:"
+                    + f"\n\tTraining Loss = {train_loss:.5f}"
+                    + (
+                        f"\n\tValidation Loss = {validation_loss:.5f}"
+                        if validation_loss
+                        else ""
                     )
-
-        except KeyboardInterrupt:
-            logger.info("Interrupted — saving current model state...")
-        finally:
-            torch.save(
-                {
-                    self.MODEL_KEY: self.model.state_dict(),
-                    self.OPTIMIZER_KEY: self.optimizer.state_dict(),
-                },
-                model_path,
-            )
-            logger.info(f"Saved to {model_path}")
+                )

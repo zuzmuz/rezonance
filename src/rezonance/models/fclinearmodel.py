@@ -5,19 +5,23 @@ class FCLinearModel(nn.Module):
         super(FCLinearModel, self).__init__()
 
         self.model = nn.Sequential(
-            nn.Linear(buffer_size, 4096),
+            nn.Linear(buffer_size, 8192),
+            nn.ReLU(),
+            nn.Linear(8192, 4096),
+            nn.ReLU(),
+            nn.Linear(4096, 4096),
             nn.ReLU(),
             nn.Linear(4096, 2048),
+            nn.ReLU(),
+            nn.Linear(2048, 2048),
             nn.ReLU(),
             nn.Linear(2048, 1024),
             nn.ReLU(),
             nn.Linear(1024, 512),
             nn.ReLU(),
-            nn.Linear(512, 256),
+            nn.Linear(512, 1024),
             nn.ReLU(),
-            nn.Linear(256, 128),
-            nn.ReLU(),
-            nn.Linear(128, 1),
+            nn.Linear(1024, 1),
         )
 
     def forward(self, X):

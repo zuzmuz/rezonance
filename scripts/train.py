@@ -12,7 +12,7 @@ from rezonance.defaults import SAMPLE_RATE, BUFFER_SIZE, A4
 from rezonance.models.convmodel import ConvModel
 from rezonance.waveform import Instrument
 from rezonance.train_dataset import InstrumentSynthDataset
-# from rezonance.real_dataset import NSynthDataset
+from rezonance.real_dataset import NSynthDataset
 from rezonance.models.fclinearmodel import FCLinearModel
 from rezonance.noise_generators import Noise
 from rezonance.training import Trainer
@@ -30,7 +30,7 @@ def main():
         [
             InstrumentSynthDataset(
                 190,
-                1000,
+                4*1000,
                 transform=transforms.random_choice(
                     transforms.none(),
                     transforms.noise(Noise.brown(0.1) + Noise.violet(0.02)),
@@ -53,7 +53,7 @@ def main():
             ),
             InstrumentSynthDataset(
                 150,
-                500,
+                4*500,
                 transform=transforms.random_choice(
                     transforms.none(),
                     transforms.noise(Noise.brown(0.1)),
@@ -70,7 +70,7 @@ def main():
             ),
             InstrumentSynthDataset(
                 110,
-                300,
+                4*300,
                 transform=transforms.none(),
                 instrument=Instrument.random(
                     1,
@@ -86,15 +86,15 @@ def main():
 
     logger.info("Creating real validation dataset")
 
-    # validation_dataset = NSynthDataset(
-    #     Path("data", "nsynth-valid"),
-    #     SAMPLE_RATE,
-    #     BUFFER_SIZE,
-    #     element_per_file=5,
-    # )
+    validation_dataset = NSynthDataset(
+        Path("data", "nsynth-valid"),
+        SAMPLE_RATE,
+        BUFFER_SIZE,
+        element_per_file=5,
+    )
 
-    # model = FCLinearModel(BUFFER_SIZE)
-    model = ConvModel()
+    model = FCLinearModel(BUFFER_SIZE)
+    # model = ConvModel()
     criterion = nn.MSELoss()
     optimizer = optim.Adam(model.parameters(), lr=0.001)
 
@@ -105,12 +105,22 @@ def main():
     )
 
     logger.info("starting training")
-    trainer.train(
-        train_dataset,
-        None, # validation_dataset,
-        log_epochs=1,
-        validate_every=10,
-    )
+    try:
+        trainer.train(
+            train_dataset,
+            validation_dataset,
+            log_epochs=2,
+            validate_every=5,
+        )
+    except KeyboardInterrupt:
+        logger.info("Interrupted — saving current model state...")
+    finally:
+        model_path = Path("data", "model.pth")
+        torch.save(
+            model.state_dict(),
+            model_path
+        )
+        logger.info(f"Saved to {model_path}")
 
     plt.figure()
     plt.title("history")
