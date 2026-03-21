@@ -56,4 +56,4 @@ class NSynthDataset(Dataset):
                 2 + idx % self.element_per_file + 1
             )
             * self.buffer_size
-        ], pitch
+        ], torch.tensor(pitch).unsqueeze(0)

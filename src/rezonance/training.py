@@ -36,7 +36,9 @@ class Trainer:
         total_loss = 0
         for idx, (batch_X, batch_y) in enumerate(data_loader):
             logger.debug(f"Training {idx}/{len(data_loader)}")
+            # logger.debug(f"sizes {batch_X.shape=} {batch_y.shape=}")
             hat_y = self.model(batch_X)
+            # logger.debug(f"sizes {hat_y.shape=}")
             loss = self.criterion(hat_y, batch_y)
 
             # adjusting parameters in training phase
@@ -56,7 +58,7 @@ class Trainer:
         total_loss = 0
         with torch.no_grad():
             for idx, (batch_X, batch_y) in enumerate(data_loader):
-                logger.debug(f"Training {idx}/{len(data_loader)}")
+                logger.debug(f"Validating {idx}/{len(data_loader)}")
                 hat_y = self.model(batch_X)
                 loss = self.criterion(hat_y, batch_y)
                 iteration_loss = loss.item()
@@ -117,6 +119,7 @@ class Trainer:
         for epoch in range(nb_epoch):
             train_loss = self._train_one_epoch(train_data_loader)
             validation_loss = None
+
             if (
                 validation_data_loader
                 and (epoch + 1) % validate_every == 0
