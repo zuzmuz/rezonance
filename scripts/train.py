@@ -6,6 +6,7 @@ import torch
 from torch import nn, optim
 from torch.utils.data import ConcatDataset
 
+from rezonance.models.smalltestmodel import SmallTestModel
 from rezonance.utils import current_device
 from rezonance.logger import logger
 from rezonance.defaults import SAMPLE_RATE, BUFFER_SIZE, A4
@@ -93,7 +94,8 @@ def main():
         element_per_file=5,
     )
 
-    model = FCLinearModel(BUFFER_SIZE)
+    # model = FCLinearModel(BUFFER_SIZE)
+    model = SmallTestModel(BUFFER_SIZE)
     # model = ConvModel()
     criterion = nn.MSELoss()
     optimizer = optim.Adam(model.parameters(), lr=0.001)

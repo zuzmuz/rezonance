@@ -77,7 +77,6 @@ class Trainer:
         validate_every: int = 10,
         store_history: bool = True,
         log_epochs: int = 5,
-        model_path: Path = Path("saved_models", "model.pth"),
     ):
         """
         Train model for an ammound of epochs

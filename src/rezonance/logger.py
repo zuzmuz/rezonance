@@ -29,7 +29,7 @@ class CustomFormatter(logging.Formatter):
 def get_logger():
     logger = logging.getLogger("mange_ta_main")
     if not logger.handlers:
-        logger.setLevel(logging.DEBUG)
+        logger.setLevel(logging.INFO)
 
         # Console output
         handler = logging.StreamHandler()
