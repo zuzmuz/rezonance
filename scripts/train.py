@@ -13,7 +13,7 @@ from rezonance.defaults import SAMPLE_RATE, BUFFER_SIZE, A4
 from rezonance.models.convmodel import ConvModel
 from rezonance.waveform import Instrument
 from rezonance.train_dataset import InstrumentSynthDataset
-from rezonance.real_dataset import NSynthDataset
+from rezonance.real_dataset import H5Dataset, NSynthDataset
 from rezonance.models.fclinearmodel import FCLinearModel
 from rezonance.noise_generators import Noise
 from rezonance.training import Trainer
@@ -27,11 +27,12 @@ def main():
 
     logger.info("Generating train synthetic dataset")
     
+    multiplier = 1
     train_dataset = ConcatDataset(
         [
             InstrumentSynthDataset(
                 190,
-                2000,
+                multiplier*500,
                 transform=transforms.random_choice(
                     transforms.none(),
                     transforms.noise(Noise.brown(0.1) + Noise.violet(0.02)),
@@ -54,7 +55,7 @@ def main():
             ),
             InstrumentSynthDataset(
                 150,
-                1000,
+                multiplier*250,
                 transform=transforms.random_choice(
                     transforms.none(),
                     transforms.noise(Noise.brown(0.1)),
@@ -71,7 +72,7 @@ def main():
             ),
             InstrumentSynthDataset(
                 110,
-                400,
+                multiplier*150,
                 transform=transforms.none(),
                 instrument=Instrument.random(
                     1,
@@ -87,15 +88,12 @@ def main():
 
     logger.info("Creating real validation dataset")
 
-    validation_dataset = NSynthDataset(
-        Path("data", "nsynth-valid"),
-        SAMPLE_RATE,
-        BUFFER_SIZE,
-        element_per_file=5,
+    validation_dataset = H5Dataset(
+        Path("data", "valid_dataset.h5")
     )
 
-    model = FCLinearModel(BUFFER_SIZE)
-    # model = SmallTestModel(BUFFER_SIZE)
+    # model = FCLinearModel(BUFFER_SIZE)
+    model = SmallTestModel(BUFFER_SIZE)
     # model = ConvModel()
     criterion = nn.MSELoss()
     optimizer = optim.Adam(model.parameters(), lr=0.001)
@@ -108,7 +106,7 @@ def main():
 
     logger.info("starting training")
 
-    validate_every = 5
+    validate_every = 2
     try:
         trainer.train(
             train_dataset,

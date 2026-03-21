@@ -4,10 +4,13 @@ import torch
 from torch import Tensor
 from torch.types import Number
 
-
-# current_device = "mps"
-current_device = "cuda"
-# current_device = "cpu"
+current_device = (
+    "cuda"
+    if torch.cuda.is_available()
+    else "mps"
+    if torch.backends.mps.is_available()
+    else "cpu"
+)
 
 
 def freq_from_pitch(
@@ -26,6 +29,7 @@ def freq_from_pitch(
     """
     return torch.pow(2, (pitch - 69) / 12) * A4
 
+
 @overload
 def pitch_from_freq(
     frequency: Number,
@@ -33,12 +37,14 @@ def pitch_from_freq(
     A4: Number,
 ) -> Number: ...
 
+
 @overload
 def pitch_from_freq(
     frequency: Tensor,
     *,
     A4: Number,
 ) -> Tensor: ...
+
 
 def pitch_from_freq(
     frequency: Number | Tensor,
@@ -112,4 +118,3 @@ def get_pitch_of_rank(
     """
     freq = sample_rate / (2 * rank)
     return pitch_from_freq(freq, A4=A4)
-

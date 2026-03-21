@@ -1,9 +1,9 @@
 from pathlib import Path
-from typing import Callable
+from typing import Callable, Literal
 import torch
 from torch import Tensor, nn, optim
 from torch.types import Number
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import ConcatDataset, Dataset, DataLoader
 
 from rezonance.logger import logger
 from rezonance.utils import current_device
@@ -142,3 +142,4 @@ class Trainer:
                         else ""
                     )
                 )
+
