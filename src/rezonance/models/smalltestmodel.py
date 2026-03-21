@@ -10,9 +10,9 @@ class SmallTestModel(nn.Module):
             nn.ReLU(),
             nn.Linear(512, 256),
             nn.ReLU(),
-            nn.Linear(256, 1024),
+            nn.Linear(256, 128),
             nn.ReLU(),
-            nn.Linear(1024, 1),
+            nn.Linear(128, 1),
         )
 
     def forward(self, X):

@@ -31,7 +31,7 @@ def main():
         [
             InstrumentSynthDataset(
                 190,
-                4*1000,
+                500,
                 transform=transforms.random_choice(
                     transforms.none(),
                     transforms.noise(Noise.brown(0.1) + Noise.violet(0.02)),
@@ -54,7 +54,7 @@ def main():
             ),
             InstrumentSynthDataset(
                 150,
-                4*500,
+                200,
                 transform=transforms.random_choice(
                     transforms.none(),
                     transforms.noise(Noise.brown(0.1)),
@@ -71,7 +71,7 @@ def main():
             ),
             InstrumentSynthDataset(
                 110,
-                4*300,
+                100,
                 transform=transforms.none(),
                 instrument=Instrument.random(
                     1,
@@ -107,12 +107,14 @@ def main():
     )
 
     logger.info("starting training")
+
+    validate_every = 1
     try:
         trainer.train(
             train_dataset,
             validation_dataset,
             log_epochs=2,
-            validate_every=5,
+            validate_every=validate_every,
         )
     except KeyboardInterrupt:
         logger.info("Interrupted — saving current model state...")
@@ -123,17 +125,19 @@ def main():
             model_path
         )
         logger.info(f"Saved to {model_path}")
+    
 
     plt.figure()
     plt.title("history")
     plt.plot(trainer.train_history, label="Training Loss")
     plt.plot(
-        np.arange(0, len(trainer.train_history), 10),
+        np.arange(0, len(trainer.validation_history), validate_every),
         trainer.validation_history,
         label="Validation Loss",
     )
     plt.legend()
-    plt.savefig(Path("figures", "loss.png"))
+    plt.show()
+    # plt.savefig(Path("figures", "loss.png"))
 
 
 if __name__ == "__main__":

@@ -82,4 +82,4 @@ class InstrumentSynthDataset(Dataset):
         waveform = self.transform(self.data[idx])
         # waveform = self.data[idx]
 
-        return waveform, pitch
+        return waveform, pitch.unsqueeze(0)
