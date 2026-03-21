@@ -39,9 +39,11 @@ class Trainer:
         self.optimizer.load_state_dict(checkpoint[self.OPTIMIZER_KEY])
 
     def _train_one_epoch(self, data_loader: DataLoader) -> Number:
+        logger.debug("Training epoch")
         self.model.train()
         total_loss = 0
-        for batch_X, batch_y in data_loader:
+        for idx, (batch_X, batch_y) in enumerate(data_loader):
+            logger.debug(f"Training {idx}/{len(data_loader)}")
             hat_y = self.model(batch_X)
             loss = self.criterion(hat_y, batch_y)
 
@@ -50,7 +52,10 @@ class Trainer:
             loss.backward()
             self.optimizer.step()
 
-            total_loss += loss.item()
+            iteration_loss = loss.item()
+            total_loss += iteration_loss
+
+            logger.debug(f"Loss {iteration_loss}")
 
         return total_loss / len(data_loader)
 
@@ -58,9 +63,14 @@ class Trainer:
         self.model.eval()
         total_loss = 0
         with torch.no_grad():
-            for batch_X, batch_y in data_loader:
+            for idx, (batch_X, batch_y) in enumerate(data_loader):
+                logger.debug(f"Training {idx}/{len(data_loader)}")
                 hat_y = self.model(batch_X)
                 loss = self.criterion(hat_y, batch_y)
+                iteration_loss = loss.item()
+                total_loss += iteration_loss
+
+                logger.debug(f"Loss {iteration_loss}")
                 total_loss += loss.item()
 
         return total_loss / len(data_loader)
@@ -105,8 +115,8 @@ class Trainer:
             validation_data_loader = DataLoader(
                 validation_dataset,
                 batch_size=batch_size,
-                shuffle=True,
-                generator=torch.Generator(current_device),
+                pin_memory=True,
+                num_workers=4,
             )
 
         self.train_history = []
