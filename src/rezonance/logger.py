@@ -2,16 +2,17 @@ import logging
 
 
 class CustomFormatter(logging.Formatter):
-    grey = "\x1b[38;20m"
+    grey = "\x1b[90m"
     yellow = "\x1b[33;20m"
     red = "\x1b[31;20m"
     bold_red = "\x1b[31;1m"
+    cyan = "\x1b[36m"
     reset = "\x1b[0m"
     format_str = "%(asctime)s - %(levelname)s - %(message)s (%(filename)s:%(lineno)d)"
 
     FORMATS = {
         logging.DEBUG: grey,
-        logging.INFO: grey,
+        logging.INFO: cyan,
         logging.WARNING: yellow,
         logging.ERROR: red,
         logging.CRITICAL: bold_red,

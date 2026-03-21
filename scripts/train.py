@@ -12,7 +12,7 @@ from rezonance.defaults import SAMPLE_RATE, BUFFER_SIZE, A4
 from rezonance.models.convmodel import ConvModel
 from rezonance.waveform import Instrument
 from rezonance.train_dataset import InstrumentSynthDataset
-from rezonance.real_dataset import NSynthDataset
+# from rezonance.real_dataset import NSynthDataset
 from rezonance.models.fclinearmodel import FCLinearModel
 from rezonance.noise_generators import Noise
 from rezonance.training import Trainer
@@ -25,85 +25,73 @@ def main():
     logger.info(f"Using device: {torch.get_default_device()}")
 
     logger.info("Generating train synthetic dataset")
-    train_dataset = InstrumentSynthDataset(
-        10,
-        12,
-        instrument=Instrument.random(
-            1.5,
-            buffer_size=BUFFER_SIZE,
-            sample_rate=SAMPLE_RATE,
-            A4=A4,
-        ),
-        transform=transforms.none(),
-        sample_rate=SAMPLE_RATE,
-        A4=A4,
+    
+    train_dataset = ConcatDataset(
+        [
+            InstrumentSynthDataset(
+                300,
+                1000,
+                transform=transforms.random_choice(
+                    transforms.none(),
+                    transforms.noise(Noise.brown(0.1) + Noise.violet(0.02)),
+                    transforms.compose(
+                        transforms.noise(Noise.brown(0.1) + Noise.violet(0.02)),
+                        transforms.scaling(1, 0.8, BUFFER_SIZE)
+                    ),
+                    transforms.noise(Noise.white(0.05)),
+                    transforms.scaling(1, 0.5, BUFFER_SIZE),
+                    transforms.mask(50, 0)
+                ),
+                instrument=Instrument.random(
+                    1.5,
+                    buffer_size=BUFFER_SIZE,
+                    sample_rate=SAMPLE_RATE,
+                    A4=A4,
+                ),
+                sample_rate=SAMPLE_RATE,
+                A4=A4,
+            ),
+            InstrumentSynthDataset(
+                200,
+                500,
+                transform=transforms.random_choice(
+                    transforms.none(),
+                    transforms.noise(Noise.brown(0.1)),
+                    transforms.scaling(1, 0.7, BUFFER_SIZE)
+                ),
+                instrument=Instrument.random(
+                    2,
+                    buffer_size=BUFFER_SIZE,
+                    sample_rate=SAMPLE_RATE,
+                    A4=A4,
+                ),
+                sample_rate=SAMPLE_RATE,
+                A4=A4,
+            ),
+            InstrumentSynthDataset(
+                100,
+                200,
+                transform=transforms.none(),
+                instrument=Instrument.random(
+                    1,
+                    buffer_size=BUFFER_SIZE,
+                    sample_rate=SAMPLE_RATE,
+                    A4=A4,
+                ),
+                sample_rate=SAMPLE_RATE,
+                A4=A4,
+            ),
+        ]
     )
-    # train_dataset = ConcatDataset(
-    #     [
-    #         InstrumentSynthDataset(
-    #             500,
-    #             2000,
-    #             transform=transforms.random_choice(
-    #                 transforms.none(),
-    #                 transforms.noise(Noise.brown(0.1) + Noise.violet(0.02)),
-    #                 transforms.compose(
-    #                     transforms.noise(Noise.brown(0.1) + Noise.violet(0.02)),
-    #                     transforms.scaling(1, 0.8, BUFFER_SIZE)
-    #                 ),
-    #                 transforms.noise(Noise.white(0.05)),
-    #                 transforms.scaling(1, 0.5, BUFFER_SIZE),
-    #                 transforms.mask(50, 0)
-    #             ),
-    #             instrument=Instrument.random(
-    #                 1.5,
-    #                 buffer_size=BUFFER_SIZE,
-    #                 sample_rate=SAMPLE_RATE,
-    #                 A4=A4,
-    #             ),
-    #             sample_rate=SAMPLE_RATE,
-    #             A4=A4,
-    #         ),
-    #         InstrumentSynthDataset(
-    #             200,
-    #             500,
-    #             transform=transforms.random_choice(
-    #                 transforms.none(),
-    #                 transforms.noise(Noise.brown(0.1)),
-    #                 transforms.scaling(1, 0.7, BUFFER_SIZE)
-    #             ),
-    #             instrument=Instrument.random(
-    #                 2,
-    #                 buffer_size=BUFFER_SIZE,
-    #                 sample_rate=SAMPLE_RATE,
-    #                 A4=A4,
-    #             ),
-    #             sample_rate=SAMPLE_RATE,
-    #             A4=A4,
-    #         ),
-    #         InstrumentSynthDataset(
-    #             100,
-    #             100,
-    #             transform=transforms.none(),
-    #             instrument=Instrument.random(
-    #                 1,
-    #                 buffer_size=BUFFER_SIZE,
-    #                 sample_rate=SAMPLE_RATE,
-    #                 A4=A4,
-    #             ),
-    #             sample_rate=SAMPLE_RATE,
-    #             A4=A4,
-    #         ),
-    #     ]
-    # )
 
     logger.info("Creating real validation dataset")
 
-    validation_dataset = NSynthDataset(
-        Path("data", "nsynth-valid"),
-        SAMPLE_RATE,
-        BUFFER_SIZE,
-        element_per_file=5,
-    )
+    # validation_dataset = NSynthDataset(
+    #     Path("data", "nsynth-valid"),
+    #     SAMPLE_RATE,
+    #     BUFFER_SIZE,
+    #     element_per_file=5,
+    # )
 
     # model = FCLinearModel(BUFFER_SIZE)
     model = ConvModel()
@@ -119,7 +107,7 @@ def main():
     logger.info("starting training")
     trainer.train(
         train_dataset,
-        validation_dataset,
+        None, # validation_dataset,
         log_epochs=2,
         validate_every=10,
     )

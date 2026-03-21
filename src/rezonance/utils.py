@@ -6,7 +6,8 @@ from torch.types import Number
 
 
 # current_device = "mps"
-current_device = "cpu"
+current_device = "cuda"
+# current_device = "cpu"
 
 
 def freq_from_pitch(
