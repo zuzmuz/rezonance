@@ -9,7 +9,7 @@ from torch.utils.data import Dataset
 
 import torchaudio
 
-
+from rezonance.utils import current_device
 class H5Dataset(Dataset):
     def __init__(
         self,
@@ -23,8 +23,8 @@ class H5Dataset(Dataset):
         return len(self.labels)  # type: ignore
 
     def __getitem__(self, idx):
-        x = torch.from_numpy(self.data[idx])  # type: ignore
-        y = torch.from_numpy(self.labels[idx])  # type: ignore
+        x = torch.from_numpy(self.data[idx]).to(current_device)  # type: ignore
+        y = torch.from_numpy(self.labels[idx]).to(current_device)  # type: ignore
         return x, y
 
 

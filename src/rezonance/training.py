@@ -108,8 +108,6 @@ class Trainer:
             validation_data_loader = DataLoader(
                 validation_dataset,
                 batch_size=batch_size,
-                pin_memory=True,
-                num_workers=4,
             )
 
         self.train_history = []

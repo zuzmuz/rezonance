@@ -27,7 +27,7 @@ def main():
 
     logger.info("Generating train synthetic dataset")
     
-    multiplier = 1
+    multiplier = 5
     train_dataset = ConcatDataset(
         [
             InstrumentSynthDataset(
@@ -57,7 +57,6 @@ def main():
                 150,
                 multiplier*250,
                 transform=transforms.random_choice(
-                    transforms.none(),
                     transforms.noise(Noise.brown(0.1)),
                     transforms.scaling(1, 0.7, BUFFER_SIZE)
                 ),
@@ -92,8 +91,8 @@ def main():
         Path("data", "valid_dataset.h5")
     )
 
-    # model = FCLinearModel(BUFFER_SIZE)
-    model = SmallTestModel(BUFFER_SIZE)
+    model = FCLinearModel(BUFFER_SIZE)
+    # model = SmallTestModel(BUFFER_SIZE)
     # model = ConvModel()
     criterion = nn.MSELoss()
     optimizer = optim.Adam(model.parameters(), lr=0.001)
@@ -106,7 +105,7 @@ def main():
 
     logger.info("starting training")
 
-    validate_every = 2
+    validate_every = 5
     try:
         trainer.train(
             train_dataset,
