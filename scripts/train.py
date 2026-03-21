@@ -31,7 +31,7 @@ def main():
         [
             InstrumentSynthDataset(
                 190,
-                500,
+                2000,
                 transform=transforms.random_choice(
                     transforms.none(),
                     transforms.noise(Noise.brown(0.1) + Noise.violet(0.02)),
@@ -54,7 +54,7 @@ def main():
             ),
             InstrumentSynthDataset(
                 150,
-                200,
+                1000,
                 transform=transforms.random_choice(
                     transforms.none(),
                     transforms.noise(Noise.brown(0.1)),
@@ -71,7 +71,7 @@ def main():
             ),
             InstrumentSynthDataset(
                 110,
-                100,
+                400,
                 transform=transforms.none(),
                 instrument=Instrument.random(
                     1,
@@ -94,8 +94,8 @@ def main():
         element_per_file=5,
     )
 
-    # model = FCLinearModel(BUFFER_SIZE)
-    model = SmallTestModel(BUFFER_SIZE)
+    model = FCLinearModel(BUFFER_SIZE)
+    # model = SmallTestModel(BUFFER_SIZE)
     # model = ConvModel()
     criterion = nn.MSELoss()
     optimizer = optim.Adam(model.parameters(), lr=0.001)
@@ -108,12 +108,12 @@ def main():
 
     logger.info("starting training")
 
-    validate_every = 1
+    validate_every = 5
     try:
         trainer.train(
             train_dataset,
             validation_dataset,
-            log_epochs=2,
+            log_epochs=1,
             validate_every=validate_every,
         )
     except KeyboardInterrupt:
