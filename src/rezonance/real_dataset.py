@@ -8,7 +8,6 @@ from torch.types import Number
 from torch.utils.data import Dataset
 
 import torchaudio
-from torchcodec.decoders import AudioDecoder
 
 from rezonance.logger import logger
 
