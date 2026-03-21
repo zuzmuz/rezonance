@@ -1,7 +1,7 @@
-import time
 from pathlib import Path
 import pandas as pd
 
+import h5py
 import torch
 from torch import Tensor
 from torch.types import Number
@@ -9,7 +9,23 @@ from torch.utils.data import Dataset
 
 import torchaudio
 
-from rezonance.logger import logger
+
+class H5Dataset(Dataset):
+    def __init__(
+        self,
+        path: Path,
+    ):
+        self.file = h5py.File(path, "r")
+        self.data = self.file["data"]
+        self.labels = self.file["labels"]
+
+    def __len__(self):
+        return len(self.labels)  # type: ignore
+
+    def __getitem__(self, idx):
+        x = torch.from_numpy(self.data[idx])  # type: ignore
+        y = torch.from_numpy(self.labels[idx])  # type: ignore
+        return x, y
 
 
 class NSynthDataset(Dataset):
