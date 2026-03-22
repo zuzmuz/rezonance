@@ -1,7 +1,7 @@
 from torch import nn
 
 class FCLinearModel(nn.Module):
-    def __init__(self, buffer_size: int):
+    def __init__(self, buffer_size: int, output_size: int):
         super(FCLinearModel, self).__init__()
 
         self.model = nn.Sequential(
@@ -21,7 +21,7 @@ class FCLinearModel(nn.Module):
             nn.ReLU(),
             nn.Linear(512, 1024),
             nn.ReLU(),
-            nn.Linear(1024, 1),
+            nn.Linear(1024, output_size),
         )
 
     def forward(self, X):

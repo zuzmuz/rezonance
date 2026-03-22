@@ -23,6 +23,9 @@ from rezonance import transforms
 def main():
 
     torch.set_default_device(current_device)
+
+    torch.manual_seed(5)
+
     logger.info(f"Using device: {torch.get_default_device()}")
 
     logger.info("Generating train synthetic dataset")
@@ -91,9 +94,9 @@ def main():
         Path("data", "valid_dataset.h5")
     )
 
-    model = FCLinearModel(BUFFER_SIZE)
+    # model = FCLinearModel(BUFFER_SIZE, 2)
     # model = SmallTestModel(BUFFER_SIZE)
-    # model = ConvModel()
+    model = ConvModel(2)
     criterion = nn.MSELoss()
     optimizer = optim.Adam(model.parameters(), lr=0.001)
 
@@ -101,22 +104,24 @@ def main():
         model,
         criterion,
         optimizer,
+        transforms.cyclic_pitch()
     )
 
     logger.info("starting training")
 
-    validate_every = 5
+    validate_every = 2
     try:
         trainer.train(
             train_dataset,
             validation_dataset,
             log_epochs=1,
+            log_batch=20,
             validate_every=validate_every,
         )
     except KeyboardInterrupt:
         logger.info("Interrupted — saving current model state...")
     finally:
-        model_path = Path("data", "model.pth")
+        model_path = Path("saved_models", "model.pth")
         torch.save(
             model.state_dict(),
             model_path
@@ -128,7 +133,11 @@ def main():
     plt.title("history")
     plt.plot(trainer.train_history, label="Training Loss")
     plt.plot(
-        np.arange(0, len(trainer.validation_history), validate_every),
+        np.arange(
+            0,
+            validate_every * len(trainer.validation_history),
+            validate_every
+        ),
         trainer.validation_history,
         label="Validation Loss",
     )

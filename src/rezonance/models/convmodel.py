@@ -5,7 +5,7 @@ from rezonance.logger import logger
 
 
 class ConvModel(nn.Module):
-    def __init__(self):
+    def __init__(self, output_size: int):
         super(ConvModel, self).__init__()
 
         self.conv1 = self._block(
@@ -27,7 +27,7 @@ class ConvModel(nn.Module):
             256, 512, kernel=64, stride=1, padding=32
         )
 
-        self.fc = nn.Linear(4 * 512, 1)
+        self.fc = nn.Linear(4 * 512, output_size)
 
     def _block(self, in_ch, out_ch, kernel, stride, padding):
         return nn.Sequential(

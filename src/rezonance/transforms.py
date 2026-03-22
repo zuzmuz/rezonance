@@ -8,6 +8,34 @@ from rezonance.noise_generators import NoiseSynth
 
 Transform = Callable[[Tensor], Tensor]
 
+def cyclic_pitch() -> Transfrom:
+
+    def transform_pitch(pitch: Tensor) -> Tensor:
+        return torch.cat(
+            [
+                torch.sin(pitch * torch.pi / 6),
+                torch.cos(pitch * torch.pi / 6),
+            ],
+            dim=-1
+        )
+
+    return transform_pitch
+
+
+def cyclic_pitch_with_octave() -> Transform:
+
+    def transform_pitch(pitch: Tensor) -> Tensor:
+        return torch.cat(
+            [
+                torch.sin(pitch * torch.pi / 6),
+                torch.cos(pitch * torch.pi / 6),
+                pitch / 12 - 1
+            ],
+            dim=-1
+        )
+
+    return transform_pitch
+
 
 def noise(noise: NoiseSynth) -> Transform:
 

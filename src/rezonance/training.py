@@ -7,7 +7,7 @@ from torch.utils.data import ConcatDataset, Dataset, DataLoader
 
 from rezonance.logger import logger
 from rezonance.utils import current_device
-
+from rezonance.transforms import Transform
 
 class Trainer:
     """
@@ -25,21 +25,26 @@ class Trainer:
         model: nn.Module,
         criterion: nn.Module,
         optimizer: optim.Optimizer,
+        output_modifier: Transform
     ):
         self.model = model
         self.criterion = criterion
         self.optimizer = optimizer
+        self.output_modifier = output_modifier
 
-    def _train_one_epoch(self, data_loader: DataLoader) -> Number:
+    def _train_one_epoch(
+        self,
+        data_loader: DataLoader,
+        log_batch: int = 0
+    ) -> Number:
         logger.debug("Training epoch")
         self.model.train()
         total_loss = 0
         for idx, (batch_X, batch_y) in enumerate(data_loader):
-            logger.debug(f"Training {idx}/{len(data_loader)}")
-            # logger.debug(f"sizes {batch_X.shape=} {batch_y.shape=}")
+            if log_batch and (idx + 1) % log_batch == 0:
+                logger.debug(f"Training {idx+1}/{len(data_loader)}")
             hat_y = self.model(batch_X)
-            # logger.debug(f"sizes {hat_y.shape=}")
-            loss = self.criterion(hat_y, batch_y)
+            loss = self.criterion(hat_y, self.output_modifier(batch_y))
 
             # adjusting parameters in training phase
             self.optimizer.zero_grad()
@@ -49,22 +54,29 @@ class Trainer:
             iteration_loss = loss.item()
             total_loss += iteration_loss
 
-            logger.debug(f"Loss {iteration_loss}")
+            if log_batch and (idx + 1) % log_batch == 0:
+                logger.debug(f"Loss {iteration_loss}")
 
         return total_loss / len(data_loader)
 
-    def _validate_one_epoch(self, data_loader: DataLoader) -> Number:
+    def _validate_one_epoch(
+        self,
+        data_loader: DataLoader,
+        log_batch: int = 0
+    ) -> Number:
         self.model.eval()
         total_loss = 0
         with torch.no_grad():
             for idx, (batch_X, batch_y) in enumerate(data_loader):
-                logger.debug(f"Validating {idx}/{len(data_loader)}")
+                if log_batch and (idx + 1) % log_batch == 0:
+                    logger.debug(f"Validating {idx+1}/{len(data_loader)}")
                 hat_y = self.model(batch_X)
-                loss = self.criterion(hat_y, batch_y)
+                loss = self.criterion(hat_y, self.output_modifier(batch_y))
                 iteration_loss = loss.item()
                 total_loss += iteration_loss
 
-                logger.debug(f"Loss {iteration_loss}")
+                if log_batch and (idx + 1) % log_batch == 0:
+                    logger.debug(f"Loss {iteration_loss}")
                 total_loss += loss.item()
 
         return total_loss / len(data_loader)
@@ -79,6 +91,7 @@ class Trainer:
         validate_every: int = 10,
         store_history: bool = True,
         log_epochs: int = 5,
+        log_batch: int = 0,
     ):
         """
         Train model for an ammound of epochs
@@ -115,7 +128,11 @@ class Trainer:
 
         epoch = 0
         for epoch in range(nb_epoch):
-            train_loss = self._train_one_epoch(train_data_loader)
+            train_loss = self._train_one_epoch(
+                train_data_loader,
+                log_batch=log_batch,
+            )
+
             validation_loss = None
 
             if (
@@ -123,7 +140,8 @@ class Trainer:
                 and (epoch + 1) % validate_every == 0
             ):
                 validation_loss = self._validate_one_epoch(
-                    validation_data_loader
+                    validation_data_loader,
+                    log_batch=log_batch,
                 )
 
             if store_history:
