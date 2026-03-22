@@ -69,7 +69,7 @@ def main():
     logger.info("storing test dataset")
     store(
         test_dataset,
-        Path("data", "test_dataset_filtered_{min_pitch}_{max_pitch}.h5"),
+        Path("data", f"test_dataset_filtered_{min_pitch}_{max_pitch}.h5"),
         min_pitch=36,
         max_pitch=83
     )

@@ -120,11 +120,10 @@ def main():
     model = ConvModel(output_transform.size())
 
     # the output transform chooses its loss function
-    criterion = output_transform.criterion()
 
     optimizer = optim.Adam(model.parameters(), lr=0.001)
 
-    trainer = Trainer(model, criterion, optimizer, output_transform)
+    trainer = Trainer(model, optimizer, output_transform)
 
     logger.info("starting training")
 
