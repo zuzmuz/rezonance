@@ -98,19 +98,23 @@ def main():
         ]
     )
 
-    return
-
     logger.info("Creating real validation dataset")
 
     validation_dataset = H5Dataset(
-        Path("data", "valid_dataset_filtered.h5")
+        Path("data", f"valid_dataset_filtered_{min_pitch}_{max_pitch}.h5")
     )
     
-    output_transform = transforms.NoteClassifier(min_pitch, max_pitch, 4)
+    output_transform = transforms.NoteClassifier(min_pitch, max_pitch, 1/4)
     # model = FCLinearModel(BUFFER_SIZE, 2)
     # model = SmallTestModel(BUFFER_SIZE)
+
+    
     model = ConvModel(output_transform.size())
-    criterion = nn.MSELoss()
+
+    # the output transform chooses its loss function
+    criterion = output_transform.criterion()
+
+
     optimizer = optim.Adam(model.parameters(), lr=0.001)
 
     trainer = Trainer(
@@ -122,7 +126,7 @@ def main():
 
     logger.info("starting training")
 
-    validate_every = 2
+    validate_every = 1
     try:
         trainer.train(
             train_dataset,

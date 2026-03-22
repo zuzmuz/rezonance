@@ -3,6 +3,7 @@ import random
 import torch
 from torch import Tensor
 from torch.types import Number
+from torch import nn
 
 from rezonance.logger import logger
 from rezonance.noise_generators import NoiseSynth
@@ -25,6 +26,10 @@ class OutputTransform:
 
     def backward(self, output: Tensor) -> Tensor:
         raise NotImplementedError
+
+    def criterion(self) -> nn.Module:
+        raise NotImplementedError
+
 
 class CyclicPitchTransform(OutputTransform):
     def __init__(self, with_octave: bool):
@@ -51,6 +56,9 @@ class CyclicPitchTransform(OutputTransform):
 
     def backward(self, output: Tensor) -> Tensor:
         raise NotImplementedError
+
+    def criterion(self) -> nn.Module:
+        return nn.MSELoss()
 
 # TODO: update documentation
 class NoteClassifier(OutputTransform):
@@ -99,7 +107,9 @@ class NoteClassifier(OutputTransform):
     
     def backward(self, output: Tensor) -> Tensor:
         raise NotImplementedError
-
+    
+    def criterion(self) -> nn.Module:
+        return nn.CrossEntropyLoss()
 
 def noise(noise: NoiseSynth) -> Transform:
 

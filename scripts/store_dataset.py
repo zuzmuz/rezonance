@@ -10,7 +10,7 @@ from rezonance.real_dataset import NSynthDataset, H5Dataset
 
 
 def store(
-    data_set: Dataset,
+    dataset: Dataset,
     path: Path,
     *,
     min_pitch: Number = 20,
@@ -19,15 +19,17 @@ def store(
     tensors = []
     labels = []
 
-    for signal, pitch in data_set:
-        if min_pitch <= pitch <= max_pitch:
+    for signal, pitch in dataset:
+        if min_pitch <= pitch < max_pitch:
             tensors.append(signal.to("cpu").numpy())
             labels.append(pitch.to("cpu").numpy())
 
     with h5py.File(path, "w") as f:
         f.create_dataset("data", data=np.stack(tensors))  # (N, C, T)
         f.create_dataset("labels", data=np.array(labels))
-
+    
+    logger.info(f"Old dataset size {len(dataset)}")
+    logger.info(f"New dataset suze {len(tensors)}")
 
 def main():
 
@@ -54,17 +56,20 @@ def main():
         Path("data", "test_dataset.h5"),
     )
 
+    min_pitch = 36
+    max_pitch = 84
+
     logger.info("storing validation dataset")
     store(
         valid_dataset,
-        Path("data", "valid_dataset_filtered_36_83.h5"),
+        Path("data", f"valid_dataset_filtered_{min_pitch}_{max_pitch}.h5"),
         min_pitch=36,
         max_pitch=83
     )
     logger.info("storing test dataset")
     store(
         test_dataset,
-        Path("data", "test_dataset_filtered_36_83.h5"),
+        Path("data", "test_dataset_filtered_{min_pitch}_{max_pitch}.h5"),
         min_pitch=36,
         max_pitch=83
     )
