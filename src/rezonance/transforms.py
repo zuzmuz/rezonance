@@ -11,9 +11,10 @@ from rezonance.noise_generators import NoiseSynth
 Transform = Callable[[Tensor], Tensor]
 
 
+# TODO this a very important class, find better name
 class OutputTransform:
     def __init__(self):
-        pass
+        self.criterion = nn.MSELoss()
 
     def size(self) -> int:
         """
@@ -27,49 +28,66 @@ class OutputTransform:
     def backward(self, output: Tensor) -> Tensor:
         raise NotImplementedError
 
-    def criterion(self) -> nn.Module:
+    def store_metric(
+        self, predictions: Tensor, expected: Tensor, loss
+    ):
         raise NotImplementedError
 
 
 class NoneTransform(OutputTransform):
+    def __init__(self):
+        self.criterion = nn.MSELoss()
+        self.losses = []
+
     def size(self) -> int:
         return 1
 
     def forward(self, pitch: Tensor) -> Tensor:
         return pitch
 
-    def criterion(self) -> nn.Module:
-        return nn.MSELoss()
+    def store_metric(
+        self, predictions: Tensor, expected: Tensor, loss
+    ):
+        self.losses.append(loss.item())
 
 
 class CyclicPitchTransform(OutputTransform):
     def __init__(self, with_octave: bool):
         self.with_octave = with_octave
+        self.criterion = nn.MSELoss()
+        self.losses = []
 
     def size(self) -> int:
         return 3 if self.with_octave else 2
 
     def forward(self, pitch: Tensor) -> Tensor:
-        return torch.cat(
-            [
-                torch.sin(pitch * torch.pi / 6),
-                torch.cos(pitch * torch.pi / 6),
-                pitch / 12 - 1
-            ],
-            dim=-1
-        ) if self.with_octave else torch.cat(
-            [
-                torch.sin(pitch * torch.pi / 6),
-                torch.cos(pitch * torch.pi / 6),
-            ],
-            dim=-1
+        return (
+            torch.cat(
+                [
+                    torch.sin(pitch * torch.pi / 6),
+                    torch.cos(pitch * torch.pi / 6),
+                    pitch / 12 - 1,
+                ],
+                dim=-1,
+            )
+            if self.with_octave
+            else torch.cat(
+                [
+                    torch.sin(pitch * torch.pi / 6),
+                    torch.cos(pitch * torch.pi / 6),
+                ],
+                dim=-1,
+            )
         )
 
     def backward(self, output: Tensor) -> Tensor:
         raise NotImplementedError
 
-    def criterion(self) -> nn.Module:
-        return nn.MSELoss()
+    def store_metric(
+        self, predictions: Tensor, expected: Tensor, loss
+    ):
+        self.losses.append(loss.item())
+
 
 # TODO: update documentation
 class NoteClassifier(OutputTransform):
@@ -87,6 +105,7 @@ class NoteClassifier(OutputTransform):
         max_pitch (Number): corresponds to last index (included)
         bins_per_octave (int): how many divisions between pitches 12 apart
     """
+
     def __init__(
         self,
         min_pitch: Number,
@@ -95,29 +114,40 @@ class NoteClassifier(OutputTransform):
     ):
         self.min_pitch = min_pitch
         self.max_pitch = max_pitch
-        self.bins_per_pitch = 1/pitch_step
+        self.bins_per_pitch = 1 / pitch_step
+        self.criterion = nn.CrossEntropyLoss()
+        self.losses = []
+        self.accuracy = []
 
     def size(self) -> int:
         return int(
             round(
-                (self.max_pitch - self.min_pitch) * self.bins_per_pitch 
+                (self.max_pitch - self.min_pitch)
+                * self.bins_per_pitch
             )
         )
 
     def _get_pitch_index(self, pitch: Tensor) -> Tensor:
         return (
-            (pitch - self.min_pitch) * self.bins_per_pitch
-        ).round().long()
-        
+            ((pitch - self.min_pitch) * self.bins_per_pitch)
+            .round()
+            .long()
+        )
 
     def forward(self, pitch: Tensor) -> Tensor:
         return self._get_pitch_index(pitch)
-    
+
     def backward(self, output: Tensor) -> Tensor:
         raise NotImplementedError
-    
-    def criterion(self) -> nn.Module:
-        return nn.CrossEntropyLoss()
+
+    def store_metric(
+        self, predictions: Tensor, expected: Tensor, loss
+    ):
+        self.losses.append(loss.item())
+        self.accuracy.append(
+            (torch.argmax(predictions) == expected).float().mean()
+        )
+
 
 def noise(noise: NoiseSynth) -> Transform:
 

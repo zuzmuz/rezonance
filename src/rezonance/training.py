@@ -1,5 +1,6 @@
 from pathlib import Path
 from typing import Callable, Literal
+from numpy import argmax
 import torch
 from torch import Tensor, nn, optim
 from torch.types import Number
@@ -24,12 +25,10 @@ class Trainer:
     def __init__(
         self,
         model: nn.Module,
-        criterion: nn.Module,
         optimizer: optim.Optimizer,
         output_transform: OutputTransform,
     ):
         self.model = model
-        self.criterion = criterion
         self.optimizer = optimizer
         self.output_transform = output_transform
 
@@ -39,14 +38,18 @@ class Trainer:
         logger.debug("Training epoch")
         self.model.train()
         total_loss = 0
+
         for idx, (batch_X, batch_y) in enumerate(data_loader):
             if log_batch and (idx + 1) % log_batch == 0:
                 logger.debug(f"Training {idx + 1}/{len(data_loader)}")
 
             hat_y = self.model(batch_X)
+            transformed_output = self.output_transform.forward(
+                batch_y
+            )
 
-            loss = self.criterion(
-                hat_y, self.output_transform.forward(batch_y)
+            loss = self.output_transform.criterion(
+                hat_y, transformed_output
             )
 
             # adjusting parameters in training phase
@@ -57,8 +60,16 @@ class Trainer:
             iteration_loss = loss.item()
             total_loss += iteration_loss
 
+            accuracy = (
+                (hat_y.argmax(-1) == transformed_output)
+                .float()
+                .mean()
+            )
+
             if log_batch and (idx + 1) % log_batch == 0:
-                logger.debug(f"Loss {iteration_loss}")
+                logger.debug(
+                    f"Loss {iteration_loss}, Accuracy {accuracy}"
+                )
 
         return total_loss / len(data_loader)
 
@@ -74,15 +85,29 @@ class Trainer:
                         f"Validating {idx + 1}/{len(data_loader)}"
                     )
                 hat_y = self.model(batch_X)
-                loss = self.criterion(
-                    hat_y, self.output_transform.forward(batch_y)
+
+                transformed_output = self.output_transform.forward(
+                    batch_y
+                )
+
+                loss = self.output_transform.criterion(
+                    hat_y, transformed_output
                 )
 
                 iteration_loss = loss.item()
                 total_loss += iteration_loss
 
+                accuracy = (
+                    (hat_y.argmax(-1) == transformed_output)
+                    .float()
+                    .mean()
+                )
+
                 if log_batch and (idx + 1) % log_batch == 0:
-                    logger.debug(f"Loss {iteration_loss}")
+                    logger.debug(
+                        f"Loss {iteration_loss}, Accuracy {accuracy}"
+                    )
+
                 total_loss += iteration_loss()
 
         return total_loss / len(data_loader)
@@ -110,9 +135,11 @@ class Trainer:
         for i in range(nb_epoch):
             hat_y = self.model(batch_X)
 
-            loss = self.criterion(
-                hat_y, self.output_transform.forward(batch_y)
+            transformed_output = self.output_transform.forward(
+                batch_y
             )
+
+            loss = self.criterion(hat_y, transformed_output)
 
             self.optimizer.zero_grad()
             loss.backward()
@@ -120,7 +147,15 @@ class Trainer:
 
             iteration_loss = loss.item()
 
-            logger.debug(f"Loss {iteration_loss}")
+            accuracy = (
+                (torch.argmax(hat_y) == transformed_output)
+                .float()
+                .mean()
+            )
+
+            logger.debug(
+                f"Loss {iteration_loss}, Accuracy {accuracy}"
+            )
 
     def train(
         self,

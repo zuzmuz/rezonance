@@ -46,12 +46,10 @@ def main():
 
     # model = SmallTestModel(BUFFER_SIZE, output_transform.size())
 
-    criterion = output_transform.criterion()
     optimizer = optim.Adam(model.parameters(), lr=0.0002)
 
     trainer = Trainer(
         model,
-        criterion,
         optimizer,
         output_transform,
     )
