@@ -57,16 +57,16 @@ def main():
     logger.info("storing validation dataset")
     store(
         valid_dataset,
-        Path("data", "valid_dataset_filtered.h5"),
-        min_pitch=20,
-        max_pitch=100
+        Path("data", "valid_dataset_filtered_36_83.h5"),
+        min_pitch=36,
+        max_pitch=83
     )
     logger.info("storing test dataset")
     store(
         test_dataset,
-        Path("data", "test_dataset_filtered.h5"),
-        min_pitch=20,
-        max_pitch=100
+        Path("data", "test_dataset_filtered_36_83.h5"),
+        min_pitch=36,
+        max_pitch=83
     )
 
 

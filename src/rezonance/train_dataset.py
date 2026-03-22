@@ -16,7 +16,7 @@ from rezonance.transforms import Transform
 class InstrumentSynthDataset(Dataset):
     def __init__(
         self,
-        nb_pitches: int,
+        bin_per_pitch: int,
         nb_harm_dist: int,
         *,
         transform: Transform,
@@ -51,8 +51,8 @@ class InstrumentSynthDataset(Dataset):
             )
 
         logger.debug(f"Generating pitches")
-        self.pitches = torch.linspace(
-            min_pitch, max_pitch, nb_pitches, dtype=torch.float32
+        self.pitches = torch.arange(
+            min_pitch, max_pitch, bin_per_pitch, dtype=torch.float32
         )
 
         logger.debug(f"Generated pitches with size {self.pitches.size(0)}")

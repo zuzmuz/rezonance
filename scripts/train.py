@@ -24,17 +24,21 @@ def main():
 
     torch.set_default_device(current_device)
 
-    torch.manual_seed(5)
+    # torch.manual_seed(5)
 
     logger.info(f"Using device: {torch.get_default_device()}")
 
     logger.info("Generating train synthetic dataset")
     
-    multiplier = 12
+    multiplier = 10
+
+    min_pitch = 36
+    max_pitch = 84 # not included
+
     train_dataset = ConcatDataset(
         [
             InstrumentSynthDataset(
-                190,
+                1/4,
                 multiplier*250,
                 transform=transforms.random_choice(
                     transforms.none(),
@@ -55,10 +59,11 @@ def main():
                 ),
                 sample_rate=SAMPLE_RATE,
                 A4=A4,
-                max_pitch=100,
+                min_pitch=min_pitch,
+                max_pitch=max_pitch,
             ),
             InstrumentSynthDataset(
-                150,
+                1/2,
                 multiplier*125,
                 transform=transforms.random_choice(
                     transforms.noise(Noise.brown(0.1)),
@@ -72,10 +77,11 @@ def main():
                 ),
                 sample_rate=SAMPLE_RATE,
                 A4=A4,
-                max_pitch=100,
+                min_pitch=min_pitch,
+                max_pitch=max_pitch,
             ),
             InstrumentSynthDataset(
-                110,
+                1,
                 multiplier*75,
                 transform=transforms.none(),
                 instrument=Instrument.random(
@@ -86,10 +92,13 @@ def main():
                 ),
                 sample_rate=SAMPLE_RATE,
                 A4=A4,
-                max_pitch=100,
+                min_pitch=min_pitch,
+                max_pitch=max_pitch,
             ),
         ]
     )
+
+    return
 
     logger.info("Creating real validation dataset")
 
@@ -97,7 +106,7 @@ def main():
         Path("data", "valid_dataset_filtered.h5")
     )
     
-    output_transform = transforms.NoteClassifier(20, 100, 120)
+    output_transform = transforms.NoteClassifier(min_pitch, max_pitch, 4)
     # model = FCLinearModel(BUFFER_SIZE, 2)
     # model = SmallTestModel(BUFFER_SIZE)
     model = ConvModel(output_transform.size())

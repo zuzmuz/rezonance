@@ -52,13 +52,14 @@ class CyclicPitchTransform(OutputTransform):
     def backward(self, output: Tensor) -> Tensor:
         raise NotImplementedError
 
+# TODO: update documentation
 class NoteClassifier(OutputTransform):
     """
     Transforms a pitch value into a tensore of classes,
     where each index represents the pitch, and a value of 1 if present, 0 if not.
     Each octave usually contains 12 notes, (from C -> B), we can increase the resolution
     of our classification by choosing a number for bins_per_octave.
-    A value of 120 for `bins_per_octave` would correspond to classifying notes with resolution
+    A value of 10 for `bins_per_pitch` would correspond to classifying notes with resolution
     of 10 cents. (in the equal temperment scale,
     the logarithmic distance between two consecutive notes is 100 cents)
 
@@ -67,25 +68,26 @@ class NoteClassifier(OutputTransform):
         max_pitch (Number): corresponds to last index (included)
         bins_per_octave (int): how many divisions between pitches 12 apart
     """
-    def __init__(self, min_pitch: Number, max_pitch: Number, bins_per_octave: int):
+    def __init__(
+        self,
+        min_pitch: Number,
+        max_pitch: Number,
+        pitch_step: Number,
+    ):
         self.min_pitch = min_pitch
         self.max_pitch = max_pitch
-        self.bins_per_octave = bins_per_octave
+        self.bins_per_pitch = 1/pitch_step
 
     def size(self) -> int:
         return int(
             round(
-                (self.max_pitch + 1 - self.min_pitch) 
-                * self.bins_per_octave 
-                / 12
+                (self.max_pitch - self.min_pitch) * self.bins_per_pitch 
             )
         )
 
     def _get_pitch_index(self, pitch: Tensor) -> Tensor:
         return (
-            (pitch - self.min_pitch)
-            * self.bins_per_octave
-            / 12
+            (pitch - self.min_pitch) * self.bins_per_pitch
         ).round().int()
         
 
