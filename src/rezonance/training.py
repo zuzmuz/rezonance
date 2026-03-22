@@ -90,6 +90,46 @@ class Trainer:
 
         return total_loss / len(data_loader)
 
+    def overfit_test(
+        self,
+        dataset: Dataset,
+        *,
+        batch_size: int = 64
+        nb_epoch: int = 100
+    ):
+        
+        # overfit a single batch to make sure everyting is proper
+
+        data_loader = DataLoader(
+            dataset,
+            batch_size=batch_size,
+            shuffle=True,
+            generator=torch.Generator(current_device),
+        )
+       
+        batch_X, batch_y = next(iter(data_loader))
+    
+        self.model.train()
+        for i in range(nb_epoch):
+            hat_y = self.model(batch_X)
+
+            transformed_output = self.output_transform.forward(batch_y)
+            loss = self.criterion(
+                hat_y,
+                self.output_transform.forward(batch_y)
+            )
+
+            self.optimizer.zero_grad()
+            loss.backward()
+            self.optimizer.step()
+
+            iteration_loss = loss.item()
+            total_loss += iteration_loss
+
+            logger.debug(f"Loss {iteration_loss}")
+
+
+
     def train(
         self,
         train_dataset: Dataset,
