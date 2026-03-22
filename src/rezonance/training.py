@@ -135,11 +135,18 @@ class Trainer:
         for i in range(nb_epoch):
             hat_y = self.model(batch_X)
 
+            # logger.debug(f"{hat_y=} {batch_y=}")
+
             transformed_output = self.output_transform.forward(
                 batch_y
             )
 
-            loss = self.criterion(hat_y, transformed_output)
+            # logger.debug(f"{transformed_output=} {torch.argmax(hat_y, -1)=}")
+
+            loss = self.output_transform.criterion(
+                hat_y, transformed_output
+            )
+
 
             self.optimizer.zero_grad()
             loss.backward()
@@ -148,7 +155,7 @@ class Trainer:
             iteration_loss = loss.item()
 
             accuracy = (
-                (torch.argmax(hat_y) == transformed_output)
+                (torch.argmax(hat_y, -1) == transformed_output)
                 .float()
                 .mean()
             )
@@ -156,6 +163,7 @@ class Trainer:
             logger.debug(
                 f"Loss {iteration_loss}, Accuracy {accuracy}"
             )
+
 
     def train(
         self,

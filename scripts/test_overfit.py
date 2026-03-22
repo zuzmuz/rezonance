@@ -18,11 +18,11 @@ def main():
     torch.set_default_device(current_device)
 
     min_pitch = 36
-    max_pitch = 84  # not included
+    max_pitch = 72  # not included
 
     dataset = InstrumentSynthDataset(
         1,
-        2000,
+        100,
         transform=transforms.none(),
         instrument=Instrument.random(
             1.5,

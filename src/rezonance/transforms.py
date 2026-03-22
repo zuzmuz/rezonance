@@ -135,7 +135,7 @@ class NoteClassifier(OutputTransform):
         )
 
     def forward(self, pitch: Tensor) -> Tensor:
-        return self._get_pitch_index(pitch)
+        return self._get_pitch_index(pitch).flatten()
 
     def backward(self, output: Tensor) -> Tensor:
         raise NotImplementedError
