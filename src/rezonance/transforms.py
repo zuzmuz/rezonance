@@ -8,23 +8,26 @@ from rezonance.noise_generators import NoiseSynth
 
 Transform = Callable[[Tensor], Tensor]
 
-def cyclic_pitch() -> Transfrom:
 
-    def transform_pitch(pitch: Tensor) -> Tensor:
-        return torch.cat(
-            [
-                torch.sin(pitch * torch.pi / 6),
-                torch.cos(pitch * torch.pi / 6),
-            ],
-            dim=-1
-        )
+class OutputTransform:
+    def __init__(self):
+        pass
+    def size(self) -> int:
+        """
+        The size of the corresponding output
+        """
+        raise NotImplementedError
+    def __call__(self, pitch: Tensor) -> Tensor:
+        raise NotImplementedError
 
-    return transform_pitch
+class CyclicPitchTransform(OutputTransform):
+    def __init__(self, with_octave: bool):
+        self.with_octave = with_octave
 
+    def size(self) -> int:
+        return 3 if self.with_octave else 2
 
-def cyclic_pitch_with_octave() -> Transform:
-
-    def transform_pitch(pitch: Tensor) -> Tensor:
+    def __call__(self, pitch: Tensor) -> Tensor:
         return torch.cat(
             [
                 torch.sin(pitch * torch.pi / 6),
@@ -32,10 +35,68 @@ def cyclic_pitch_with_octave() -> Transform:
                 pitch / 12 - 1
             ],
             dim=-1
+        ) if self.with_octave else torch.cat(
+            [
+                torch.sin(pitch * torch.pi / 6),
+                torch.cos(pitch * torch.pi / 6),
+            ],
+            dim=-1
         )
 
-    return transform_pitch
+class NoteClassifier(OutputTransform):
+    """
+    Transforms a pitch value into a tensore of classes,
+    where each index represents the pitch, and a value of 1 if present, 0 if not.
+    Each octave usually contains 12 notes, (from C -> B), we can increase the resolution
+    of our classification by choosing a number for bins_per_octave.
+    A value of 120 for `bins_per_octave` would correspond to classifying notes with resolution
+    of 10 cents. (in the equal temperment scale,
+    the logarithmic distance between two consecutive notes is 100 cents)
 
+    Parameters:
+        min_pitch (Number): corresponds to index 0
+        max_pitch (Number): corresponds to last index
+        bins_per_octave (int): how many divisions between pitches 12 apart
+    """
+    def __init__(self, min_pitch: Number, max_pitch: Number, bins_per_octave: int):
+        self.min_pitch = min_pitch
+        self.max_pitch = max_pitch
+        self.bins_per_octave = bins_per_octave
+
+    def size(self) -> int:
+        return int(
+            (
+                (self.max_pitch - self.min_pitch) 
+                * self.bins_per_octave 
+                / 12
+            ).round()
+        )
+
+    def _get_pitch_index(self, pitch: Tensor) -> int:
+        return int(
+            (
+                (pitch - self.min_pitch)
+                * self.bins_per_octave
+                / 12
+            ).round()
+        )
+
+    def __call__(self, pitch: Tensor) -> Tensor:
+        bins = torch.zeros(self.size())
+        bins[self._get_pitch_index] =  
+        return 
+
+def note_classifier(
+    bins_per_octave: Number,
+    min_pitch: Number,
+    max_pitch: Number
+) -> Transform:
+    
+    def transform_pitch(pitch: Tensor) -> Tensor:
+        pitches = torch.zeros((bins_per_octave * (max_pitch - min_pitch)) / 12)
+        pitches[(bins_per_octave * (pitch - min_pitch))/12)] = 1
+        return pitches
+    return transform_pitch
 
 def noise(noise: NoiseSynth) -> Transform:
 
