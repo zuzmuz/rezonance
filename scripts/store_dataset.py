@@ -21,8 +21,8 @@ def store(
 
     for signal, pitch in data_set:
         if min_pitch <= pitch <= max_pitch:
-            tensors.append(signal)
-            labels.append(pitch)
+            tensors.append(signal.to("cpu").numpy())
+            labels.append(pitch.to("cpu").numpy())
 
     with h5py.File(path, "w") as f:
         f.create_dataset("data", data=np.stack(tensors))  # (N, C, T)
