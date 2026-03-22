@@ -7,7 +7,7 @@ from torch.utils.data import ConcatDataset, Dataset, DataLoader
 
 from rezonance.logger import logger
 from rezonance.utils import current_device
-from rezonance.transforms import Transform
+from rezonance.transforms import OutputTransform
 
 class Trainer:
     """
@@ -25,12 +25,12 @@ class Trainer:
         model: nn.Module,
         criterion: nn.Module,
         optimizer: optim.Optimizer,
-        output_modifier: Transform
+        output_transform: OutputTransform
     ):
         self.model = model
         self.criterion = criterion
         self.optimizer = optimizer
-        self.output_modifier = output_modifier
+        self.output_transform = output_transform
 
     def _train_one_epoch(
         self,
@@ -44,7 +44,11 @@ class Trainer:
             if log_batch and (idx + 1) % log_batch == 0:
                 logger.debug(f"Training {idx+1}/{len(data_loader)}")
             hat_y = self.model(batch_X)
-            loss = self.criterion(hat_y, self.output_modifier(batch_y))
+
+            loss = self.criterion(
+                hat_y,
+                self.output_transform.forward(batch_y)
+            )
 
             # adjusting parameters in training phase
             self.optimizer.zero_grad()
@@ -71,7 +75,11 @@ class Trainer:
                 if log_batch and (idx + 1) % log_batch == 0:
                     logger.debug(f"Validating {idx+1}/{len(data_loader)}")
                 hat_y = self.model(batch_X)
-                loss = self.criterion(hat_y, self.output_modifier(batch_y))
+                loss = self.criterion(
+                    hat_y,
+                    self.output_transform.forward(batch_y)
+                )
+
                 iteration_loss = loss.item()
                 total_loss += iteration_loss
 

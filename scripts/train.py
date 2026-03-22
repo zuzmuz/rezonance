@@ -93,10 +93,11 @@ def main():
     validation_dataset = H5Dataset(
         Path("data", "valid_dataset.h5")
     )
-
+    
+    output_transform = transforms.NoteClassifier(20, 100, 120)
     # model = FCLinearModel(BUFFER_SIZE, 2)
     # model = SmallTestModel(BUFFER_SIZE)
-    model = ConvModel(2)
+    model = ConvModel(output_transform.size())
     criterion = nn.MSELoss()
     optimizer = optim.Adam(model.parameters(), lr=0.001)
 
@@ -104,7 +105,7 @@ def main():
         model,
         criterion,
         optimizer,
-        transforms.cyclic_pitch()
+        output_transform
     )
 
     logger.info("starting training")
