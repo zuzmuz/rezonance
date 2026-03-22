@@ -30,12 +30,12 @@ def main():
 
     logger.info("Generating train synthetic dataset")
     
-    multiplier = 1
+    multiplier = 12
     train_dataset = ConcatDataset(
         [
             InstrumentSynthDataset(
                 190,
-                multiplier*500,
+                multiplier*250,
                 transform=transforms.random_choice(
                     transforms.none(),
                     transforms.noise(Noise.brown(0.1) + Noise.violet(0.02)),
@@ -59,7 +59,7 @@ def main():
             ),
             InstrumentSynthDataset(
                 150,
-                multiplier*250,
+                multiplier*125,
                 transform=transforms.random_choice(
                     transforms.noise(Noise.brown(0.1)),
                     transforms.scaling(1, 0.7, BUFFER_SIZE)
@@ -76,7 +76,7 @@ def main():
             ),
             InstrumentSynthDataset(
                 110,
-                multiplier*150,
+                multiplier*75,
                 transform=transforms.none(),
                 instrument=Instrument.random(
                     1,
@@ -94,7 +94,7 @@ def main():
     logger.info("Creating real validation dataset")
 
     validation_dataset = H5Dataset(
-        Path("data", "valid_dataset.h5")
+        Path("data", "valid_dataset_filtered.h5")
     )
     
     output_transform = transforms.NoteClassifier(20, 100, 120)
