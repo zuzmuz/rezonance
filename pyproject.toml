@@ -36,3 +36,8 @@ package = true
 exclude = [".venv"]
 line-length = 70
 indent-width = 4
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.2",
+]

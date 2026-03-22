@@ -29,27 +29,31 @@ def main():
     logger.info(f"Using device: {torch.get_default_device()}")
 
     logger.info("Generating train synthetic dataset")
-    
+
     multiplier = 10
 
     min_pitch = 36
-    max_pitch = 84 # not included
+    max_pitch = 84  # not included
 
     train_dataset = ConcatDataset(
         [
             InstrumentSynthDataset(
-                1/4,
-                multiplier*250,
+                1 / 4,
+                multiplier * 250,
                 transform=transforms.random_choice(
                     transforms.none(),
-                    transforms.noise(Noise.brown(0.1) + Noise.violet(0.02)),
+                    transforms.noise(
+                        Noise.brown(0.1) + Noise.violet(0.02)
+                    ),
                     transforms.compose(
-                        transforms.noise(Noise.brown(0.1) + Noise.violet(0.02)),
-                        transforms.scaling(1, 0.8, BUFFER_SIZE)
+                        transforms.noise(
+                            Noise.brown(0.1) + Noise.violet(0.02)
+                        ),
+                        transforms.scaling(1, 0.8, BUFFER_SIZE),
                     ),
                     transforms.noise(Noise.white(0.05)),
                     transforms.scaling(1, 0.5, BUFFER_SIZE),
-                    transforms.mask(50, 0)
+                    transforms.mask(50, 0),
                 ),
                 instrument=Instrument.random(
                     1.5,
@@ -63,11 +67,11 @@ def main():
                 max_pitch=max_pitch,
             ),
             InstrumentSynthDataset(
-                1/2,
-                multiplier*125,
+                1 / 2,
+                multiplier * 125,
                 transform=transforms.random_choice(
                     transforms.noise(Noise.brown(0.1)),
-                    transforms.scaling(1, 0.7, BUFFER_SIZE)
+                    transforms.scaling(1, 0.7, BUFFER_SIZE),
                 ),
                 instrument=Instrument.random(
                     2,
@@ -82,7 +86,7 @@ def main():
             ),
             InstrumentSynthDataset(
                 1,
-                multiplier*75,
+                multiplier * 75,
                 transform=transforms.none(),
                 instrument=Instrument.random(
                     1,
@@ -101,28 +105,26 @@ def main():
     logger.info("Creating real validation dataset")
 
     validation_dataset = H5Dataset(
-        Path("data", f"valid_dataset_filtered_{min_pitch}_{max_pitch}.h5")
+        Path(
+            "data",
+            f"valid_dataset_filtered_{min_pitch}_{max_pitch}.h5",
+        )
     )
-    
-    output_transform = transforms.NoteClassifier(min_pitch, max_pitch, 1/4)
+
+    output_transform = transforms.NoteClassifier(
+        min_pitch, max_pitch, 1 / 4
+    )
     # model = FCLinearModel(BUFFER_SIZE, 2)
     # model = SmallTestModel(BUFFER_SIZE)
 
-    
     model = ConvModel(output_transform.size())
 
     # the output transform chooses its loss function
     criterion = output_transform.criterion()
 
-
     optimizer = optim.Adam(model.parameters(), lr=0.001)
 
-    trainer = Trainer(
-        model,
-        criterion,
-        optimizer,
-        output_transform
-    )
+    trainer = Trainer(model, criterion, optimizer, output_transform)
 
     logger.info("starting training")
 
@@ -139,12 +141,8 @@ def main():
         logger.info("Interrupted — saving current model state...")
     finally:
         model_path = Path("saved_models", "model.pth")
-        torch.save(
-            model.state_dict(),
-            model_path
-        )
+        torch.save(model.state_dict(), model_path)
         logger.info(f"Saved to {model_path}")
-    
 
     plt.figure()
     plt.title("history")
@@ -153,7 +151,7 @@ def main():
         np.arange(
             0,
             validate_every * len(trainer.validation_history),
-            validate_every
+            validate_every,
         ),
         trainer.validation_history,
         label="Validation Loss",

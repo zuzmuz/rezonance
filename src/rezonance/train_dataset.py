@@ -16,7 +16,7 @@ from rezonance.transforms import Transform
 class InstrumentSynthDataset(Dataset):
     def __init__(
         self,
-        bin_per_pitch: int,
+        pitch_step: Number,
         nb_harm_dist: int,
         *,
         transform: Transform,
@@ -52,10 +52,12 @@ class InstrumentSynthDataset(Dataset):
 
         logger.debug(f"Generating pitches")
         self.pitches = torch.arange(
-            min_pitch, max_pitch, bin_per_pitch, dtype=torch.float32
+            min_pitch, max_pitch, pitch_step, dtype=torch.float32
         )
 
-        logger.debug(f"Generated pitches with size {self.pitches.size(0)}")
+        logger.debug(
+            f"Generated pitches with size {self.pitches.size(0)}"
+        )
 
         self.nb_harm_dist = nb_harm_dist
 
@@ -64,10 +66,12 @@ class InstrumentSynthDataset(Dataset):
             self.pitches,
             per_pitch=nb_harm_dist,
         )
-        logger.debug(f"Generated signals with size = {self.data.size(0)}")
+        logger.debug(
+            f"Generated signals with size = {self.data.size(0)}"
+        )
 
         self.data /= self.data.std(dim=1, keepdim=True)
-        
+
         logger.debug("Moving tensor to device")
         self.data.to(current_device)
 

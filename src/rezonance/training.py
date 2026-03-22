@@ -9,6 +9,7 @@ from rezonance.logger import logger
 from rezonance.utils import current_device
 from rezonance.transforms import OutputTransform
 
+
 class Trainer:
     """
     Model trainer class, create one with a model, loss function and optimzer.
@@ -25,7 +26,7 @@ class Trainer:
         model: nn.Module,
         criterion: nn.Module,
         optimizer: optim.Optimizer,
-        output_transform: OutputTransform
+        output_transform: OutputTransform,
     ):
         self.model = model
         self.criterion = criterion
@@ -33,22 +34,19 @@ class Trainer:
         self.output_transform = output_transform
 
     def _train_one_epoch(
-        self,
-        data_loader: DataLoader,
-        log_batch: int = 0
+        self, data_loader: DataLoader, log_batch: int = 0
     ) -> Number:
         logger.debug("Training epoch")
         self.model.train()
         total_loss = 0
         for idx, (batch_X, batch_y) in enumerate(data_loader):
             if log_batch and (idx + 1) % log_batch == 0:
-                logger.debug(f"Training {idx+1}/{len(data_loader)}")
+                logger.debug(f"Training {idx + 1}/{len(data_loader)}")
+
             hat_y = self.model(batch_X)
 
-            transformed_output = self.output_transform.forward(batch_y)
             loss = self.criterion(
-                hat_y,
-                self.output_transform.forward(batch_y)
+                hat_y, self.output_transform.forward(batch_y)
             )
 
             # adjusting parameters in training phase
@@ -65,20 +63,19 @@ class Trainer:
         return total_loss / len(data_loader)
 
     def _validate_one_epoch(
-        self,
-        data_loader: DataLoader,
-        log_batch: int = 0
+        self, data_loader: DataLoader, log_batch: int = 0
     ) -> Number:
         self.model.eval()
         total_loss = 0
         with torch.no_grad():
             for idx, (batch_X, batch_y) in enumerate(data_loader):
                 if log_batch and (idx + 1) % log_batch == 0:
-                    logger.debug(f"Validating {idx+1}/{len(data_loader)}")
+                    logger.debug(
+                        f"Validating {idx + 1}/{len(data_loader)}"
+                    )
                 hat_y = self.model(batch_X)
                 loss = self.criterion(
-                    hat_y,
-                    self.output_transform.forward(batch_y)
+                    hat_y, self.output_transform.forward(batch_y)
                 )
 
                 iteration_loss = loss.item()
@@ -86,7 +83,7 @@ class Trainer:
 
                 if log_batch and (idx + 1) % log_batch == 0:
                     logger.debug(f"Loss {iteration_loss}")
-                total_loss += loss.item()
+                total_loss += iteration_loss()
 
         return total_loss / len(data_loader)
 
@@ -94,10 +91,10 @@ class Trainer:
         self,
         dataset: Dataset,
         *,
-        batch_size: int = 64
-        nb_epoch: int = 100
+        batch_size: int = 64,
+        nb_epoch: int = 100,
     ):
-        
+
         # overfit a single batch to make sure everyting is proper
 
         data_loader = DataLoader(
@@ -106,17 +103,15 @@ class Trainer:
             shuffle=True,
             generator=torch.Generator(current_device),
         )
-       
+
         batch_X, batch_y = next(iter(data_loader))
-    
+
         self.model.train()
         for i in range(nb_epoch):
             hat_y = self.model(batch_X)
 
-            transformed_output = self.output_transform.forward(batch_y)
             loss = self.criterion(
-                hat_y,
-                self.output_transform.forward(batch_y)
+                hat_y, self.output_transform.forward(batch_y)
             )
 
             self.optimizer.zero_grad()
@@ -124,11 +119,8 @@ class Trainer:
             self.optimizer.step()
 
             iteration_loss = loss.item()
-            total_loss += iteration_loss
 
             logger.debug(f"Loss {iteration_loss}")
-
-
 
     def train(
         self,
@@ -207,4 +199,3 @@ class Trainer:
                         else ""
                     )
                 )
-

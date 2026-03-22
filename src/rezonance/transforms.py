@@ -31,6 +31,17 @@ class OutputTransform:
         raise NotImplementedError
 
 
+class NoneTransform(OutputTransform):
+    def size(self) -> int:
+        return 1
+
+    def forward(self, pitch: Tensor) -> Tensor:
+        return pitch
+
+    def criterion(self) -> nn.Module:
+        return nn.MSELoss()
+
+
 class CyclicPitchTransform(OutputTransform):
     def __init__(self, with_octave: bool):
         self.with_octave = with_octave
@@ -96,14 +107,11 @@ class NoteClassifier(OutputTransform):
     def _get_pitch_index(self, pitch: Tensor) -> Tensor:
         return (
             (pitch - self.min_pitch) * self.bins_per_pitch
-        ).round().int()
+        ).round().long()
         
 
     def forward(self, pitch: Tensor) -> Tensor:
-        bins = torch.zeros((pitch.size(0), self.size(),))
-        lines = torch.arange(pitch.size(0))
-        bins[lines, self._get_pitch_index(pitch)] =  1
-        return bins
+        return self._get_pitch_index(pitch)
     
     def backward(self, output: Tensor) -> Tensor:
         raise NotImplementedError

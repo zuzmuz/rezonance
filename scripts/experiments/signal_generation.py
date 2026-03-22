@@ -3,6 +3,7 @@ Visualize different synthetic waveform generation.
 We use the instrumentSynth class to generate signals following a certain formant or timbre.
 The timbre is defined by the instrumentSynth class.
 """
+
 import matplotlib.pyplot as plt
 
 import torch
@@ -58,7 +59,7 @@ def main():
     ]
 
     per_pitch = 2
-    pitches = torch.tensor([40, 70]) 
+    pitches = torch.tensor([40, 70])
     for title, synth in instruments:
         plt.figure()
         signal = synth.generate(pitches, per_pitch=per_pitch)
@@ -76,6 +77,6 @@ def main():
         plt.plot(signal[3])
     plt.show()
 
+
 if __name__ == "__main__":
     main()
-

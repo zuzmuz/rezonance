@@ -1,10 +1,12 @@
 """
 This scripts verifies and plots the different noise function generations
 """
+
 import numpy as np
 import matplotlib.pyplot as plt
 
 from rezonance.noise_generators import Noise, NoiseSynth
+
 
 def main():
     buffer_size = 1024
@@ -40,5 +42,5 @@ def main():
     plt.show()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
