@@ -30,7 +30,7 @@ def main():
 
     logger.info("Generating train synthetic dataset")
     
-    multiplier = 5
+    multiplier = 1
     train_dataset = ConcatDataset(
         [
             InstrumentSynthDataset(
@@ -55,6 +55,7 @@ def main():
                 ),
                 sample_rate=SAMPLE_RATE,
                 A4=A4,
+                max_pitch=100,
             ),
             InstrumentSynthDataset(
                 150,
@@ -71,6 +72,7 @@ def main():
                 ),
                 sample_rate=SAMPLE_RATE,
                 A4=A4,
+                max_pitch=100,
             ),
             InstrumentSynthDataset(
                 110,
@@ -84,6 +86,7 @@ def main():
                 ),
                 sample_rate=SAMPLE_RATE,
                 A4=A4,
+                max_pitch=100,
             ),
         ]
     )

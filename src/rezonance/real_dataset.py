@@ -10,6 +10,8 @@ from torch.utils.data import Dataset
 import torchaudio
 
 from rezonance.utils import current_device
+
+
 class H5Dataset(Dataset):
     def __init__(
         self,

@@ -45,6 +45,7 @@ class Trainer:
                 logger.debug(f"Training {idx+1}/{len(data_loader)}")
             hat_y = self.model(batch_X)
 
+            transformed_output = self.output_transform.forward(batch_y)
             loss = self.criterion(
                 hat_y,
                 self.output_transform.forward(batch_y)

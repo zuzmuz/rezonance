@@ -4,6 +4,7 @@ import torch
 from torch import Tensor
 from torch.types import Number
 
+from rezonance.logger import logger
 from rezonance.noise_generators import NoiseSynth
 
 Transform = Callable[[Tensor], Tensor]
@@ -63,7 +64,7 @@ class NoteClassifier(OutputTransform):
 
     Parameters:
         min_pitch (Number): corresponds to index 0
-        max_pitch (Number): corresponds to last index
+        max_pitch (Number): corresponds to last index (included)
         bins_per_octave (int): how many divisions between pitches 12 apart
     """
     def __init__(self, min_pitch: Number, max_pitch: Number, bins_per_octave: int):
@@ -74,7 +75,7 @@ class NoteClassifier(OutputTransform):
     def size(self) -> int:
         return int(
             round(
-                (self.max_pitch - self.min_pitch) 
+                (self.max_pitch + 1 - self.min_pitch) 
                 * self.bins_per_octave 
                 / 12
             )
