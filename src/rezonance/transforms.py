@@ -12,12 +12,17 @@ Transform = Callable[[Tensor], Tensor]
 class OutputTransform:
     def __init__(self):
         pass
+
     def size(self) -> int:
         """
         The size of the corresponding output
         """
         raise NotImplementedError
-    def __call__(self, pitch: Tensor) -> Tensor:
+
+    def forward(self, pitch: Tensor) -> Tensor:
+        raise NotImplementedError
+
+    def backward(self, output: Tensor) -> Tensor:
         raise NotImplementedError
 
 class CyclicPitchTransform(OutputTransform):
@@ -27,7 +32,7 @@ class CyclicPitchTransform(OutputTransform):
     def size(self) -> int:
         return 3 if self.with_octave else 2
 
-    def __call__(self, pitch: Tensor) -> Tensor:
+    def forward(self, pitch: Tensor) -> Tensor:
         return torch.cat(
             [
                 torch.sin(pitch * torch.pi / 6),
@@ -42,6 +47,9 @@ class CyclicPitchTransform(OutputTransform):
             ],
             dim=-1
         )
+
+    def backward(self, output: Tensor) -> Tensor:
+        raise NotImplementedError
 
 class NoteClassifier(OutputTransform):
     """
@@ -65,38 +73,30 @@ class NoteClassifier(OutputTransform):
 
     def size(self) -> int:
         return int(
-            (
+            round(
                 (self.max_pitch - self.min_pitch) 
                 * self.bins_per_octave 
                 / 12
-            ).round()
+            )
         )
 
-    def _get_pitch_index(self, pitch: Tensor) -> int:
-        return int(
-            (
-                (pitch - self.min_pitch)
-                * self.bins_per_octave
-                / 12
-            ).round()
-        )
+    def _get_pitch_index(self, pitch: Tensor) -> Tensor:
+        return (
+            (pitch - self.min_pitch)
+            * self.bins_per_octave
+            / 12
+        ).round().int()
+        
 
-    def __call__(self, pitch: Tensor) -> Tensor:
-        bins = torch.zeros(self.size())
-        bins[self._get_pitch_index] =  
-        return 
-
-def note_classifier(
-    bins_per_octave: Number,
-    min_pitch: Number,
-    max_pitch: Number
-) -> Transform:
+    def forward(self, pitch: Tensor) -> Tensor:
+        bins = torch.zeros((pitch.size(0), self.size(),))
+        lines = torch.arange(pitch.size(0))
+        bins[lines, self._get_pitch_index(pitch)] =  1
+        return bins
     
-    def transform_pitch(pitch: Tensor) -> Tensor:
-        pitches = torch.zeros((bins_per_octave * (max_pitch - min_pitch)) / 12)
-        pitches[(bins_per_octave * (pitch - min_pitch))/12)] = 1
-        return pitches
-    return transform_pitch
+    def backward(self, output: Tensor) -> Tensor:
+        raise NotImplementedError
+
 
 def noise(noise: NoiseSynth) -> Transform:
 
