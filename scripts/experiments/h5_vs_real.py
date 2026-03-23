@@ -5,14 +5,14 @@ import matplotlib.pyplot as plt
 
 from rezonance.logger import logger
 from rezonance.defaults import BUFFER_SIZE, SAMPLE_RATE
-from rezonance.datasets.real_dataset import H5Dataset, NSynthDataset
+from rezonance.datasets.real_dataset import H5Dataset, FileDataset
 
 
 def main():
 
     h5_dataset = H5Dataset(Path("data", "test_dataset.h5"))
 
-    nsynth_dataset = NSynthDataset(
+    nsynth_dataset = FileDataset(
         Path("data", "nsynth-test"),
         SAMPLE_RATE,
         BUFFER_SIZE,

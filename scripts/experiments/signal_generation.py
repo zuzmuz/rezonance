@@ -3,7 +3,7 @@ Visualize different synthetic waveform generation.
 We use the instrumentSynth class to generate signals following a certain formant or timbre.
 The timbre is defined by the instrumentSynth class.
 """
-
+from pathlib import Path
 import matplotlib.pyplot as plt
 
 import torch
@@ -32,7 +32,7 @@ def main():
             ),
         ),
         (
-            "squre",
+            "square",
             Instrument.square(
                 buffer_size=BUFFER_SIZE,
                 sample_rate=SAMPLE_RATE,

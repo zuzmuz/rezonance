@@ -12,6 +12,7 @@ from rezonance import transforms
 
 
 def main():
+
     torch.manual_seed(2)
 
     instrument = Instrument.random(

@@ -14,8 +14,8 @@ from rezonance.models.convmodel import ConvModel
 from rezonance.audioutils.waveform_generators import Instrument
 from rezonance.audioutils.noise_generators import Noise
 from rezonance.datasets.synth_dataset import InstrumentSynthDataset
-from rezonance.datasets.real_dataset import H5Dataset, NSynthDataset
-from rezonance.models.fclinearmodel import FCLinearModel
+from rezonance.datasets.real_dataset import H5Dataset
+from rezonance.models.fcmodel import FCModel
 from rezonance.training import Trainer
 from rezonance.objectives import NoteClassifierObjective
 from rezonance import transforms

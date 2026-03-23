@@ -29,7 +29,7 @@ class H5Dataset(Dataset):
         return x, y
 
 
-class NSynthDataset(Dataset):
+class FileDataset(Dataset):
     def __init__(
         self,
         folder: Path,

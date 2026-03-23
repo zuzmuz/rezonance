@@ -1,8 +1,8 @@
 from torch import nn
 
-class FCLinearModel(nn.Module):
+class FCModel(nn.Module):
     def __init__(self, buffer_size: int, output_size: int):
-        super(FCLinearModel, self).__init__()
+        super(FCModel, self).__init__()
 
         self.model = nn.Sequential(
             nn.Linear(buffer_size, 8192),

@@ -7,7 +7,7 @@ from pathlib import Path
 import torch
 import matplotlib.pyplot as plt
 from rezonance.logger import logger
-from rezonance.datasets.real_dataset import NSynthDataset
+from rezonance.datasets.real_dataset import FileDataset
 from rezonance.audioutils.waveform_generators import Instrument
 
 
@@ -19,7 +19,7 @@ def main():
     torch.manual_seed(40)
 
     folder = Path("data", "nsynth-test")
-    dataset = NSynthDataset(folder, sample_rate, buffer_size, 5)
+    dataset = FileDataset(folder, sample_rate, buffer_size, 5)
 
     logger.debug(f"dataset length {len(dataset)}")
 
