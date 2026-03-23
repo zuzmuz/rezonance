@@ -1,10 +1,10 @@
-from pathlib import Path
-from typing import Callable, Literal
-from numpy import argmax
+"""
+Main training module for training and validation
+"""
+
 import torch
-from torch import Tensor, nn, optim
-from torch.types import Number
-from torch.utils.data import ConcatDataset, Dataset, DataLoader
+from torch import nn, optim
+from torch.utils.data import Dataset, DataLoader
 
 from rezonance.logger import logger
 from rezonance.utils import current_device
@@ -17,8 +17,8 @@ class Trainer:
     Will train model with validation
     Parameters:
         model (Module): the model to train
-        criterion (Loss): a loss function
         optimizer (Optimizer): the loss optimizer
+        objective (Objective): the training objective
 
     """
 
@@ -35,6 +35,7 @@ class Trainer:
     def _train_one_epoch(
         self, data_loader: DataLoader, log_batch: int = 0
     ) -> Metric | None:
+
         logger.debug("Training epoch")
         self.model.train()
 
@@ -119,7 +120,7 @@ class Trainer:
 
         self.model.train()
 
-        for i in range(nb_epoch):
+        for _ in range(nb_epoch):
             predictions = self.model(batch_X)
 
             labels = self.objective.forward(batch_y)
@@ -147,7 +148,7 @@ class Trainer:
         log_batch: int = 0,
     ):
         """
-        Train model for an ammound of epochs
+        Train model for an ammount of epochs
         Parameters:
             train_dataset: (Dataset),
             validation_dataset: (Dataset | None)
@@ -194,11 +195,9 @@ class Trainer:
                 validation_data_loader
                 and (epoch + 1) % validate_every == 0
             ):
-                validation_metric = (
-                    self._validate_one_epoch(
-                        validation_data_loader,
-                        log_batch=log_batch,
-                    )
+                validation_metric = self._validate_one_epoch(
+                    validation_data_loader,
+                    log_batch=log_batch,
                 )
 
             if store_history:

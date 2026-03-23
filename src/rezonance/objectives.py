@@ -1,9 +1,15 @@
-from numpy import argmax
+"""
+Module that defines objective classes.
+"""
+
 import torch
 from torch import Tensor, nn
 
 
 class Metric:
+    """
+    Generic metric class to abstract away regression and classification metrics from the trainer
+    """
     def __repr__(self) -> str: ...
 
     def __iadd__(self, rhs) -> Metric: ...
@@ -70,22 +76,54 @@ class ClassificationMetric(Metric):
         return self
 
 
-# TODO this a very important class, find better name
 class Objective:
-    def output_size(self) -> int: ...
+    """
+    Abstract class that defines a training objective.
+    A training objective defines the output transform,
+    generate training labels from pitch numbers.
 
-    def forward(self, pitch: Tensor) -> Tensor: ...
+    It also defines the corresponding loss and training metrics
+    """
 
-    def backward(self, output: Tensor) -> Tensor: ...
+    def output_size(self) -> int:
+        """
+        Labels output size. Used to dynamically define the size of last layers of
+        the training models.
+        """
+        ...
+
+    def forward(self, pitch: Tensor) -> Tensor:
+        """
+        Generate labels from pitch number
+        """
+        ...
+
+    def backward(self, output: Tensor) -> Tensor:
+        """
+        Get pitch back from label tensor
+        """
+        ...
 
     def loss(
         self, predictions: Tensor, labels: Tensor, log: bool = False
-    ) -> tuple[Tensor, Metric | None]: ...
-    
-    def get_metric(self) -> Metric: ...
+    ) -> tuple[Tensor, Metric | None]:
+        """
+        Calculate loss based on objective criterion and return metric if needed
+        """
+        ...
+
+    def get_metric(self) -> Metric:
+        """
+        Get corresponding metric object to objective
+        """
+        ...
 
 
 class BasicObjective(Objective):
+    """
+    Objective that performs regression on pitch number directly
+    """
+
     def __init__(self):
         self.criterion = nn.MSELoss()
 
@@ -102,11 +140,16 @@ class BasicObjective(Objective):
         if log:
             return loss, LossMetric(loss.item())
         return loss, None
-    
+
     def get_metric(self) -> Metric:
         return LossMetric()
 
+
 class CyclicPitchObjective(Objective):
+    """
+    Objective that model pitch as points around a circle
+    """
+
     def __init__(self, with_octave: bool):
         self.with_octave = with_octave
         self.criterion = nn.MSELoss()
@@ -147,6 +190,11 @@ class CyclicPitchObjective(Objective):
 
 
 class NoteClassifierObjective(Objective):
+    """
+    One hot encoding of pitches by selecting min and max pitch with
+    a resolution step
+    """
+
     def __init__(
         self,
         min_pitch: torch.types.Number,
@@ -188,7 +236,6 @@ class NoteClassifierObjective(Objective):
             ).item()
             return loss, ClassificationMetric(loss_value, accuracy)
         return loss, None
-
 
     def get_metric(self) -> Metric:
         return ClassificationMetric()

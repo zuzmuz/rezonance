@@ -2,7 +2,6 @@
 Module that contains input transform fumctions for data augmentation.
 """
 
-
 from typing import Callable
 import torch
 from torch import Tensor
@@ -21,6 +20,7 @@ def noise(noise: NoiseSynth) -> Transform:
     """
     Create data augmentation transform that adds noise to input signal
     """
+
     def transform_signal(input: Tensor) -> Tensor:
         input = input + noise.generate(input.size(0))
         return input / input.std()
@@ -32,6 +32,7 @@ def mask(size: int, mask_value: Number) -> Transform:
     """
     Create data augmentation transform that mask out random time band in signal
     """
+
     def transform_signal(input: Tensor) -> Tensor:
         input = input.clone()
 
@@ -65,6 +66,7 @@ def compose(
     """
     Create a sequence of transforms
     """
+
     def transform_signal(input: Tensor) -> Tensor:
         for transform in transforms:
             input = transform(input)
@@ -80,6 +82,7 @@ def random_choice(
     Create a transform that represent a uniformely distributed
     choice between multiple transforms
     """
+
     def transform_signal(input: Tensor) -> Tensor:
         choice = torch.randint(len(transforms), ())
         return transforms[choice](input)
