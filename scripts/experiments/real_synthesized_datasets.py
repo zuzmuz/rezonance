@@ -45,7 +45,7 @@ def main():
     plt.subplot(2, 1, 2)
     plt.plot(synth_signal[0])
     plt.title(f"synth {pitch=}")
-    plt.show()
+    plt.savefig(Path("figures", "real_vs_synth.png"))
 
 
 if __name__ == "__main__":

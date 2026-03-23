@@ -1,6 +1,6 @@
 import numpy as np
 import torch
-from torch import Tensor, mul
+from torch import Tensor
 from torch.types import Number
 from typing import Callable
 
@@ -121,6 +121,36 @@ class WaveformSynth:
 
 
 class InstrumentSynth:
+    """
+    A utility class to generate a audio signal buffer from a distribution of
+    powers and phases.
+
+    approach is based on additive synthesis: each signal is
+    constructed as a sum of sinusoidal harmonics at integer multiples of a
+    fundamental frequency F0, where the amplitude and phase of each
+    harmonic are drawn from instrument-specific distributions.
+
+    `power_dist` and `phase_dist` are both callables that take in a series of 
+    "frequencie multipliers" that should correspond to the fundamental frequency
+    and its harmonic. The size of the distributions depends on the pitches `rank`.
+
+    Because of Nyquist frequency, each pitch has a maximum number of possible harmonics,
+    going above would lead to aliasing.
+
+    The additional `int` in the callable corresponds to the batch size required per fundamental frequency
+
+    This dynamic structure allows for generic signal generations where frequency multipliers
+    don't need to be natural numbers.
+
+    Parameters:
+        power_dist: A callable to batch generate power distributions
+        phase_dist: A callable to batch generate phase distributions
+    KeywordArguments:
+        buffer_size (int): buffer size
+        sample_rate (Number): the sampling frequency
+        A4 (Number): The A4 reference
+    """
+
     def __init__(
         self,
         power_dist: Callable[[Tensor, int], Tensor],
@@ -273,6 +303,16 @@ class Instrument:
         sample_rate: Number,
         A4: Number,
     ) -> InstrumentSynth:
+        """
+        Create an instrument synth with a random power
+        and phase distribution
+        Parameters:
+            alpha (Number): harmonic decay, high value faster decay
+        KeywordArguments:
+            buffer_size (int): the buffer size the instrument generates
+            sample_rate (Number): the sampling frequency
+            A4 (Number): the A4 reference
+        """
         return InstrumentSynth(
             power_dist=lambda multipliers, per_pitch: (
                 torch.rand(per_pitch, multipliers.size(0))
