@@ -38,6 +38,7 @@ class Trainer:
         logger.debug("Training epoch")
         self.model.train()
         total_loss = 0
+        total_accuracy = 0
 
         for idx, (batch_X, batch_y) in enumerate(data_loader):
             if log_batch and (idx + 1) % log_batch == 0:
@@ -65,19 +66,21 @@ class Trainer:
                 .float()
                 .mean()
             )
+            total_accuracy += accuracy
 
             if log_batch and (idx + 1) % log_batch == 0:
                 logger.debug(
                     f"Loss {iteration_loss}, Accuracy {accuracy}"
                 )
 
-        return total_loss / len(data_loader)
+        return total_loss / len(data_loader), total_accuracy / len(data_loader)
 
     def _validate_one_epoch(
         self, data_loader: DataLoader, log_batch: int = 0
     ) -> Number:
         self.model.eval()
         total_loss = 0
+        total_accuracy = 0
         with torch.no_grad():
             for idx, (batch_X, batch_y) in enumerate(data_loader):
                 if log_batch and (idx + 1) % log_batch == 0:
@@ -102,15 +105,14 @@ class Trainer:
                     .float()
                     .mean()
                 )
+                total_accuracy += accuracy
 
                 if log_batch and (idx + 1) % log_batch == 0:
                     logger.debug(
                         f"Loss {iteration_loss}, Accuracy {accuracy}"
                     )
 
-                total_loss += iteration_loss()
-
-        return total_loss / len(data_loader)
+        return total_loss / len(data_loader), total_accuracy / len(data_loader)
 
     def overfit_test(
         self,
@@ -209,35 +211,40 @@ class Trainer:
 
         self.train_history = []
         self.validation_history = []
+        self.train_accuracy_history = []
+        self.validation_accuracy_history = []
 
         epoch = 0
         for epoch in range(nb_epoch):
-            train_loss = self._train_one_epoch(
+            train_loss, train_accuracy = self._train_one_epoch(
                 train_data_loader,
                 log_batch=log_batch,
             )
 
             validation_loss = None
+            validation_accuracy = None
 
             if (
                 validation_data_loader
                 and (epoch + 1) % validate_every == 0
             ):
-                validation_loss = self._validate_one_epoch(
+                validation_loss, validation_accuracy = self._validate_one_epoch(
                     validation_data_loader,
                     log_batch=log_batch,
                 )
 
             if store_history:
                 self.train_history.append(train_loss)
+                self.train_accuracy_history.append(train_accuracy)
                 if validation_loss:
                     self.validation_history.append(validation_loss)
+                    self.validation_accuracy_history.append(validation_accuracy)
             if log_epochs > 0 and (epoch + 1) % log_epochs == 0:
                 logger.info(
                     f"Epoch {epoch + 1}:"
-                    + f"\n\tTraining Loss = {train_loss:.5f}"
+                    + f"\n\tTraining Loss = {train_loss:.5f}, Training Accuracy = {train_accuracy:.5f}"
                     + (
-                        f"\n\tValidation Loss = {validation_loss:.5f}"
+                        f"\n\tValidation Loss = {validation_loss:.5f}, Validation Accuracy = {validation_accuracy:.5f}"
                         if validation_loss
                         else ""
                     )

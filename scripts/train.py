@@ -30,7 +30,7 @@ def main():
 
     logger.info("Generating train synthetic dataset")
 
-    multiplier = 10
+    multiplier = 1
 
     min_pitch = 36
     max_pitch = 84  # not included
