@@ -4,8 +4,10 @@ from torch import Tensor
 from torch.types import Number
 from typing import Callable
 
-from rezonance.utils import freq_from_pitch, get_rank_of_pitch
-from rezonance.logger import logger
+from rezonance.audioutils.pitch_utils import (
+    freq_from_pitch,
+    get_rank_of_pitch,
+)
 
 
 class WaveformSynth:
@@ -130,7 +132,7 @@ class InstrumentSynth:
     fundamental frequency F0, where the amplitude and phase of each
     harmonic are drawn from instrument-specific distributions.
 
-    `power_dist` and `phase_dist` are both callables that take in a series of 
+    `power_dist` and `phase_dist` are both callables that take in a series of
     "frequencie multipliers" that should correspond to the fundamental frequency
     and its harmonic. The size of the distributions depends on the pitches `rank`.
 

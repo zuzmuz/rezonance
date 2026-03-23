@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 
 from rezonance.logger import logger
 from rezonance.defaults import BUFFER_SIZE, SAMPLE_RATE
-from rezonance.real_dataset import H5Dataset, NSynthDataset
+from rezonance.datasets.real_dataset import H5Dataset, NSynthDataset
 
 
 def main():

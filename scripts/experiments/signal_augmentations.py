@@ -6,8 +6,8 @@ import torch
 import matplotlib.pyplot as plt
 
 from rezonance.defaults import A4, BUFFER_SIZE, SAMPLE_RATE
-from rezonance.noise_generators import Noise
-from rezonance.waveform import Instrument
+from rezonance.audioutils.noise_generators import Noise
+from rezonance.audioutils.waveform_generators import Instrument
 from rezonance import transforms
 
 

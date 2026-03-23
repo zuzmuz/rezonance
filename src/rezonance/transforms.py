@@ -7,8 +7,7 @@ import torch
 from torch import Tensor
 from torch.types import Number
 
-from rezonance.logger import logger
-from rezonance.noise_generators import NoiseSynth
+from rezonance.audioutils.noise_generators import NoiseSynth
 
 Transform = Callable[[Tensor], Tensor]
 """

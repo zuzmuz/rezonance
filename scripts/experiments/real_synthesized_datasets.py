@@ -7,8 +7,8 @@ from pathlib import Path
 import torch
 import matplotlib.pyplot as plt
 from rezonance.logger import logger
-from rezonance.real_dataset import NSynthDataset
-from rezonance.waveform import Instrument
+from rezonance.datasets.real_dataset import NSynthDataset
+from rezonance.audioutils.waveform_generators import Instrument
 
 
 def main():

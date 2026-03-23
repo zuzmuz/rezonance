@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import torch
 
 from rezonance.defaults import SAMPLE_RATE, BUFFER_SIZE, A4
-from rezonance.waveform import Instrument
+from rezonance.audioutils.waveform_generators import Instrument
 
 
 def main():

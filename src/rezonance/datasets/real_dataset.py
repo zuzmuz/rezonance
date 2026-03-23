@@ -3,7 +3,6 @@ import pandas as pd
 
 import h5py
 import torch
-from torch import Tensor
 from torch.types import Number
 from torch.utils.data import Dataset
 

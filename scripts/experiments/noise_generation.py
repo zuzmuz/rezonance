@@ -5,7 +5,7 @@ This scripts verifies and plots the different noise function generations
 import numpy as np
 import matplotlib.pyplot as plt
 
-from rezonance.noise_generators import Noise, NoiseSynth
+from rezonance.audioutils.noise_generators import Noise, NoiseSynth
 
 
 def main():

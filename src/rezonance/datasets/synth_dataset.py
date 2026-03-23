@@ -1,23 +1,40 @@
+"""
+Module to generate synthetic datasets
+"""
+
 import torch
 from torch.types import Number
-from torch import Tensor
 from torch.utils.data import Dataset
 
-from rezonance import waveform
+from rezonance.utils import current_device
 from rezonance.logger import logger
-from rezonance.utils import (
+from rezonance.audioutils.pitch_utils import (
     pitch_from_freq,
-    current_device,
 )
-from rezonance.waveform import InstrumentSynth
+from rezonance.audioutils.waveform_generators import InstrumentSynth
 from rezonance.transforms import Transform
 
 
 class InstrumentSynthDataset(Dataset):
+    """
+    Synthetic dataset generator
+
+    Parameters:
+        pitch_step (Number): the pitch resolution, a value of 1 corresponds to half note.
+        per_pitch (int): the number of signals to generate per pitch
+    KeywordArguments:
+        transform (Transform): transform to run on generated data
+        instrument (InstrumentSynth): the instrument to use for data generation
+        sample_rate (Number): the sampling frequency
+        A4 (Number): the A4 reference
+        min_pitch (Number): the minimum pitch to generate
+        max_pitch (Number): the maximum pitch to generate
+        seed (int): random seed
+    """
     def __init__(
         self,
         pitch_step: Number,
-        nb_harm_dist: int,
+        per_pitch: int,
         *,
         transform: Transform,
         instrument: InstrumentSynth,
@@ -59,12 +76,12 @@ class InstrumentSynthDataset(Dataset):
             f"Generated pitches with size {self.pitches.size(0)}"
         )
 
-        self.nb_harm_dist = nb_harm_dist
+        self.nb_harm_dist = per_pitch
 
         logger.debug("Generating signals")
         self.data = self.instrument.generate(
             self.pitches,
-            per_pitch=nb_harm_dist,
+            per_pitch=per_pitch,
         )
         logger.debug(
             f"Generated signals with size = {self.data.size(0)}"
