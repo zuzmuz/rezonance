@@ -8,7 +8,7 @@ from torch.utils.data import ConcatDataset, Dataset, DataLoader
 
 from rezonance.logger import logger
 from rezonance.utils import current_device
-from rezonance.transforms import OutputTransform
+from rezonance.objectives import Objective, Metric
 
 
 class Trainer:
@@ -26,31 +26,32 @@ class Trainer:
         self,
         model: nn.Module,
         optimizer: optim.Optimizer,
-        output_transform: OutputTransform,
+        objective: Objective,
     ):
         self.model = model
         self.optimizer = optimizer
-        self.output_transform = output_transform
+        self.objective = objective
 
     def _train_one_epoch(
         self, data_loader: DataLoader, log_batch: int = 0
-    ) -> Number:
+    ) -> Metric | None:
         logger.debug("Training epoch")
         self.model.train()
-        total_loss = 0
-        total_accuracy = 0
+
+        total_metric = self.objective.get_metric()
 
         for idx, (batch_X, batch_y) in enumerate(data_loader):
-            if log_batch and (idx + 1) % log_batch == 0:
+            log_iteration = (
+                log_batch > 0 and (idx + 1) % log_batch == 0
+            )
+            if log_iteration:
                 logger.debug(f"Training {idx + 1}/{len(data_loader)}")
 
-            hat_y = self.model(batch_X)
-            transformed_output = self.output_transform.forward(
-                batch_y
-            )
+            predictions = self.model(batch_X)
+            labels = self.objective.forward(batch_y)
 
-            loss = self.output_transform.criterion(
-                hat_y, transformed_output
+            loss, iteration_metric = self.objective.loss(
+                predictions, labels, log_iteration
             )
 
             # adjusting parameters in training phase
@@ -58,61 +59,42 @@ class Trainer:
             loss.backward()
             self.optimizer.step()
 
-            iteration_loss = loss.item()
-            total_loss += iteration_loss
+            if log_iteration:
+                total_metric += iteration_metric
+                logger.debug(iteration_metric)
 
-            accuracy = (
-                (hat_y.argmax(-1) == transformed_output)
-                .float()
-                .mean()
-            )
-            total_accuracy += accuracy
-
-            if log_batch and (idx + 1) % log_batch == 0:
-                logger.debug(
-                    f"Loss {iteration_loss}, Accuracy {accuracy}"
-                )
-
-        return total_loss / len(data_loader), total_accuracy / len(data_loader)
+        return total_metric / len(data_loader)
 
     def _validate_one_epoch(
         self, data_loader: DataLoader, log_batch: int = 0
-    ) -> Number:
+    ) -> Metric:
         self.model.eval()
-        total_loss = 0
-        total_accuracy = 0
+
+        total_metric = self.objective.get_metric()
+
         with torch.no_grad():
             for idx, (batch_X, batch_y) in enumerate(data_loader):
-                if log_batch and (idx + 1) % log_batch == 0:
+                log_iteration = (
+                    log_batch > 0 and (idx + 1) % log_batch == 0
+                )
+                if log_iteration:
                     logger.debug(
                         f"Validating {idx + 1}/{len(data_loader)}"
                     )
-                hat_y = self.model(batch_X)
 
-                transformed_output = self.output_transform.forward(
-                    batch_y
+                predictions = self.model(batch_X)
+
+                labels = self.objective.forward(batch_y)
+
+                _, iteration_metric = self.objective.loss(
+                    predictions, labels
                 )
 
-                loss = self.output_transform.criterion(
-                    hat_y, transformed_output
-                )
+                if log_iteration:
+                    total_metric += iteration_metric
+                    logger.debug(iteration_metric)
 
-                iteration_loss = loss.item()
-                total_loss += iteration_loss
-
-                accuracy = (
-                    (hat_y.argmax(-1) == transformed_output)
-                    .float()
-                    .mean()
-                )
-                total_accuracy += accuracy
-
-                if log_batch and (idx + 1) % log_batch == 0:
-                    logger.debug(
-                        f"Loss {iteration_loss}, Accuracy {accuracy}"
-                    )
-
-        return total_loss / len(data_loader), total_accuracy / len(data_loader)
+        return total_metric / len(data_loader)
 
     def overfit_test(
         self,
@@ -133,39 +115,24 @@ class Trainer:
 
         batch_X, batch_y = next(iter(data_loader))
 
+        # metric = self.objecive.get_metric()
+
         self.model.train()
+
         for i in range(nb_epoch):
-            hat_y = self.model(batch_X)
+            predictions = self.model(batch_X)
 
-            # logger.debug(f"{hat_y=} {batch_y=}")
+            labels = self.objective.forward(batch_y)
 
-            transformed_output = self.output_transform.forward(
-                batch_y
+            loss, iteration_metric = self.objective.loss(
+                predictions, labels, log=True
             )
-
-            # logger.debug(f"{transformed_output=} {torch.argmax(hat_y, -1)=}")
-
-            loss = self.output_transform.criterion(
-                hat_y, transformed_output
-            )
-
 
             self.optimizer.zero_grad()
             loss.backward()
             self.optimizer.step()
 
-            iteration_loss = loss.item()
-
-            accuracy = (
-                (torch.argmax(hat_y, -1) == transformed_output)
-                .float()
-                .mean()
-            )
-
-            logger.debug(
-                f"Loss {iteration_loss}, Accuracy {accuracy}"
-            )
-
+            logger.debug(iteration_metric)
 
     def train(
         self,
@@ -216,36 +183,35 @@ class Trainer:
 
         epoch = 0
         for epoch in range(nb_epoch):
-            train_loss, train_accuracy = self._train_one_epoch(
+            train_metric = self._train_one_epoch(
                 train_data_loader,
                 log_batch=log_batch,
             )
 
-            validation_loss = None
-            validation_accuracy = None
+            validation_metric = None
 
             if (
                 validation_data_loader
                 and (epoch + 1) % validate_every == 0
             ):
-                validation_loss, validation_accuracy = self._validate_one_epoch(
-                    validation_data_loader,
-                    log_batch=log_batch,
+                validation_metric = (
+                    self._validate_one_epoch(
+                        validation_data_loader,
+                        log_batch=log_batch,
+                    )
                 )
 
             if store_history:
-                self.train_history.append(train_loss)
-                self.train_accuracy_history.append(train_accuracy)
-                if validation_loss:
-                    self.validation_history.append(validation_loss)
-                    self.validation_accuracy_history.append(validation_accuracy)
+                self.train_history.append(train_metric)
+                if validation_metric:
+                    self.validation_history.append(validation_metric)
             if log_epochs > 0 and (epoch + 1) % log_epochs == 0:
                 logger.info(
                     f"Epoch {epoch + 1}:"
-                    + f"\n\tTraining Loss = {train_loss:.5f}, Training Accuracy = {train_accuracy:.5f}"
+                    + f"\n\t{train_metric}"
                     + (
-                        f"\n\tValidation Loss = {validation_loss:.5f}, Validation Accuracy = {validation_accuracy:.5f}"
-                        if validation_loss
+                        f"\n\t{validation_metric}"
+                        if validation_metric
                         else ""
                     )
                 )
