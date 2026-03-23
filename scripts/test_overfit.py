@@ -11,7 +11,7 @@ from rezonance.train_dataset import InstrumentSynthDataset
 from rezonance.models.convmodel import ConvModel 
 from rezonance.models.smalltestmodel import SmallTestModel
 from rezonance.training import Trainer
-
+from rezonance.objectives import NoteClassifierObjective
 
 def main():
 
@@ -36,13 +36,13 @@ def main():
         max_pitch=max_pitch,
     )
 
-    output_transform = transforms.NoteClassifier(
+    objective = NoteClassifierObjective(
         min_pitch, max_pitch, 1
     )
     
     # output_transform = transforms.CyclicPitchTransform(False)
 
-    model = ConvModel(output_transform.size())
+    model = ConvModel(objective.output_size())
 
     # model = SmallTestModel(BUFFER_SIZE, output_transform.size())
 
@@ -51,7 +51,7 @@ def main():
     trainer = Trainer(
         model,
         optimizer,
-        output_transform,
+        objective,
     )
 
     trainer.overfit_test(dataset)

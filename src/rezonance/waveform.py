@@ -187,9 +187,10 @@ class Instrument:
             power_dist=lambda multipliers, per_pitch: (
                 1 / (multipliers)
             ).repeat(per_pitch, 1),
-            phase_dist=lambda multipliers, per_pitch: torch.rand(
-                per_pitch
-            ).repeat(multipliers.size(0), 1).T * multipliers, 
+            phase_dist=lambda multipliers, per_pitch: (
+                torch.rand(per_pitch).repeat(multipliers.size(0), 1).T
+                * multipliers
+            ),
             buffer_size=buffer_size,
             sample_rate=sample_rate,
             A4=A4,
@@ -209,9 +210,10 @@ class Instrument:
 
         return InstrumentSynth(
             power_dist=power_dist_func,
-            phase_dist=lambda multipliers, per_pitch: torch.rand(
-                per_pitch
-            ).repeat(multipliers.size(0), 1).T * multipliers,
+            phase_dist=lambda multipliers, per_pitch: (
+                torch.rand(per_pitch).repeat(multipliers.size(0), 1).T
+                * multipliers
+            ),
             buffer_size=buffer_size,
             sample_rate=sample_rate,
             A4=A4,
@@ -232,9 +234,10 @@ class Instrument:
 
         return InstrumentSynth(
             power_dist=power_dist_func,
-            phase_dist=lambda multipliers, per_pitch: torch.rand(
-                per_pitch
-            ).repeat(multipliers.size(0), 1).T * multipliers,
+            phase_dist=lambda multipliers, per_pitch: (
+                torch.rand(per_pitch).repeat(multipliers.size(0), 1).T
+                * multipliers
+            ),
             buffer_size=buffer_size,
             sample_rate=sample_rate,
             A4=A4,
