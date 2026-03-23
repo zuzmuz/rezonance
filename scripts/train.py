@@ -34,7 +34,7 @@ def main():
 
     logger.info("Generating train synthetic dataset")
 
-    multiplier = 1
+    multiplier = 11
 
     min_pitch = 36
     max_pitch = 84  # not included
@@ -117,9 +117,9 @@ def main():
 
     objective = NoteClassifierObjective(min_pitch, max_pitch, 1 / 4)
     # model = FCLinearModel(BUFFER_SIZE, objective.output_size())
-    model = SmallTestModel(BUFFER_SIZE, objective.output_size())
+    # model = SmallTestModel(BUFFER_SIZE, objective.output_size())
 
-    # model = ConvModel(objective.output_size())
+    model = ConvModel(objective.output_size())
 
     # the output transform chooses its loss function
 

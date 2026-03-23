@@ -40,6 +40,7 @@ class Trainer:
         self.model.train()
 
         total_metric = self.objective.get_metric()
+        iteration_size = 0
 
         for idx, (batch_X, batch_y) in enumerate(data_loader):
             log_iteration = (
@@ -62,9 +63,10 @@ class Trainer:
 
             if log_iteration:
                 total_metric += iteration_metric
+                iteration_size += 1
                 logger.debug(iteration_metric)
 
-        return total_metric / len(data_loader)
+        return total_metric / iteration_size
 
     def _validate_one_epoch(
         self, data_loader: DataLoader, log_batch: int = 0
