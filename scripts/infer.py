@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from rezonance.logger import logger
 from rezonance.defaults import BUFFER_SIZE, SAMPLE_RATE
 from rezonance.models.convmodel import ConvModel
-from rezonance.real_dataset import NSynthDataset
+from rezonance.datasets.real_dataset import NSynthDataset
 
 
 def main():

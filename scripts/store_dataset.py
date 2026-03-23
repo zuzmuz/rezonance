@@ -2,11 +2,12 @@ from pathlib import Path
 
 import h5py
 import numpy as np
+from torch.types import Number
 from torch.utils.data import Dataset
 
 from rezonance.logger import logger
 from rezonance.defaults import BUFFER_SIZE, SAMPLE_RATE
-from rezonance.real_dataset import NSynthDataset, H5Dataset
+from rezonance.datasets.real_dataset import NSynthDataset, H5Dataset
 
 
 def store(

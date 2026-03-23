@@ -11,12 +11,13 @@ from rezonance.utils import current_device
 from rezonance.logger import logger
 from rezonance.defaults import SAMPLE_RATE, BUFFER_SIZE, A4
 from rezonance.models.convmodel import ConvModel
-from rezonance.waveform import Instrument
-from rezonance.train_dataset import InstrumentSynthDataset
-from rezonance.real_dataset import H5Dataset, NSynthDataset
+from rezonance.audioutils.waveform_generators import Instrument
+from rezonance.audioutils.noise_generators import Noise
+from rezonance.datasets.synth_dataset import InstrumentSynthDataset
+from rezonance.datasets.real_dataset import H5Dataset, NSynthDataset
 from rezonance.models.fclinearmodel import FCLinearModel
-from rezonance.noise_generators import Noise
 from rezonance.training import Trainer
+from rezonance.objectives import NoteClassifierObjective
 from rezonance import transforms
 
 
@@ -111,19 +112,19 @@ def main():
         )
     )
 
-    output_transform = transforms.NoteClassifier(
+    objective = NoteClassifierObjective(
         min_pitch, max_pitch, 1 / 4
     )
     # model = FCLinearModel(BUFFER_SIZE, 2)
     # model = SmallTestModel(BUFFER_SIZE)
 
-    model = ConvModel(output_transform.size())
+    model = ConvModel(objective.output_size())
 
     # the output transform chooses its loss function
 
     optimizer = optim.Adam(model.parameters(), lr=0.001)
 
-    trainer = Trainer(model, optimizer, output_transform)
+    trainer = Trainer(model, optimizer, objective)
 
     logger.info("starting training")
 
@@ -136,6 +137,7 @@ def main():
             log_batch=20,
             validate_every=validate_every,
         )
+
     except KeyboardInterrupt:
         logger.info("Interrupted — saving current model state...")
     finally:
@@ -143,6 +145,7 @@ def main():
         torch.save(model.state_dict(), model_path)
         logger.info(f"Saved to {model_path}")
 
+    # TODO: fix plotting for specific objective
     plt.figure()
     plt.title("history")
     plt.plot(trainer.train_history, label="Training Loss")

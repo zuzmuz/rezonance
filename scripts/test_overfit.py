@@ -6,8 +6,8 @@ from torch import nn, optim
 from rezonance.defaults import SAMPLE_RATE, BUFFER_SIZE, A4
 from rezonance.utils import current_device
 from rezonance import transforms
-from rezonance.waveform import Instrument
-from rezonance.train_dataset import InstrumentSynthDataset
+from rezonance.audioutils.waveform_generators import Instrument
+from rezonance.datasets.synth_dataset import InstrumentSynthDataset
 from rezonance.models.convmodel import ConvModel 
 from rezonance.models.smalltestmodel import SmallTestModel
 from rezonance.training import Trainer
