@@ -88,11 +88,11 @@ class Trainer:
                 labels = self.objective.forward(batch_y)
 
                 _, iteration_metric = self.objective.loss(
-                    predictions, labels, log_iteration
+                    predictions, labels, True
                 )
+                total_metric += iteration_metric
 
                 if log_iteration:
-                    total_metric += iteration_metric
                     logger.debug(iteration_metric)
 
         return total_metric / len(data_loader)
