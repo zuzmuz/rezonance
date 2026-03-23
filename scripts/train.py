@@ -135,7 +135,7 @@ def main():
             train_dataset,
             validation_dataset,
             log_epochs=1,
-            log_batch=50,
+            log_batch=20,
             validate_every=validate_every,
         )
 
