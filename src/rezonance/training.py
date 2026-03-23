@@ -205,9 +205,9 @@ class Trainer:
             if log_epochs > 0 and (epoch + 1) % log_epochs == 0:
                 logger.info(
                     f"Epoch {epoch + 1}:"
-                    + f"\n\t{train_metric}"
+                    + f"\n\tTraining: {train_metric}"
                     + (
-                        f"\n\t{validation_metric}"
+                        f"\n\tValidation: {validation_metric}"
                         if validation_metric
                         else ""
                     )
