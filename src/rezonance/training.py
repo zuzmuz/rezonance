@@ -88,7 +88,7 @@ class Trainer:
                 labels = self.objective.forward(batch_y)
 
                 _, iteration_metric = self.objective.loss(
-                    predictions, labels
+                    predictions, labels, log_iteration
                 )
 
                 if log_iteration:
