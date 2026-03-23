@@ -17,7 +17,10 @@ from rezonance.datasets.synth_dataset import InstrumentSynthDataset
 from rezonance.datasets.real_dataset import H5Dataset
 from rezonance.models.fcmodel import FCModel
 from rezonance.training import Trainer
-from rezonance.objectives import NoteClassifierObjective
+from rezonance.objectives import (
+    ClassificationMetric,
+    NoteClassifierObjective,
+)
 from rezonance import transforms
 
 
@@ -112,13 +115,11 @@ def main():
         )
     )
 
-    objective = NoteClassifierObjective(
-        min_pitch, max_pitch, 1 / 4
-    )
-    # model = FCLinearModel(BUFFER_SIZE, 2)
-    # model = SmallTestModel(BUFFER_SIZE)
+    objective = NoteClassifierObjective(min_pitch, max_pitch, 1 / 4)
+    # model = FCLinearModel(BUFFER_SIZE, objective.output_size())
+    model = SmallTestModel(BUFFER_SIZE, objective.output_size())
 
-    model = ConvModel(objective.output_size())
+    # model = ConvModel(objective.output_size())
 
     # the output transform chooses its loss function
 
@@ -134,7 +135,7 @@ def main():
             train_dataset,
             validation_dataset,
             log_epochs=1,
-            log_batch=20,
+            log_batch=1,
             validate_every=validate_every,
         )
 
@@ -147,18 +148,39 @@ def main():
 
     # TODO: fix plotting for specific objective
     plt.figure()
-    plt.title("history")
-    plt.plot(trainer.train_history, label="Training Loss")
+    plt.title("Loss History")
+    plt.plot(
+        [metric.loss for metric in trainer.train_history],
+        label="Training Loss",
+    )
     plt.plot(
         np.arange(
             0,
             validate_every * len(trainer.validation_history),
             validate_every,
         ),
-        trainer.validation_history,
+        [metric.loss for metric in trainer.validation_history],
         label="Validation Loss",
     )
     plt.legend()
+
+    if isinstance(objective.get_metric(), ClassificationMetric):
+        plt.figure()
+        plt.title("Accuracy History")
+        plt.plot(
+            [metric.accuracy for metric in trainer.train_history],
+            label="Training Accuracy",
+        )
+        plt.plot(
+            np.arange(
+                0,
+                validate_every * len(trainer.validation_history),
+                validate_every,
+            ),
+            [metric.accuracy for metric in trainer.validation_history],
+            label="Validation Accuracy",
+        )
+
     plt.show()
     # plt.savefig(Path("figures", "loss.png"))
 

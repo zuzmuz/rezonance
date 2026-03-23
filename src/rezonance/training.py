@@ -179,8 +179,6 @@ class Trainer:
 
         self.train_history = []
         self.validation_history = []
-        self.train_accuracy_history = []
-        self.validation_accuracy_history = []
 
         epoch = 0
         for epoch in range(nb_epoch):

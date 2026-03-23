@@ -10,6 +10,7 @@ class Metric:
     """
     Generic metric class to abstract away regression and classification metrics from the trainer
     """
+
     def __repr__(self) -> str: ...
 
     def __iadd__(self, rhs) -> Metric: ...
