@@ -135,7 +135,7 @@ def main():
             train_dataset,
             validation_dataset,
             log_epochs=1,
-            log_batch=1,
+            log_batch=50,
             validate_every=validate_every,
         )
 
@@ -163,6 +163,7 @@ def main():
         label="Validation Loss",
     )
     plt.legend()
+    plt.savefig(Path("figures", "loss.png"))
 
     if isinstance(objective.get_metric(), ClassificationMetric):
         plt.figure()
@@ -180,9 +181,8 @@ def main():
             [metric.accuracy for metric in trainer.validation_history],
             label="Validation Accuracy",
         )
+        plt.savefig(Path("figures", "accuracy.png"))
 
-    plt.show()
-    # plt.savefig(Path("figures", "loss.png"))
 
 
 if __name__ == "__main__":
