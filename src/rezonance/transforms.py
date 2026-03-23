@@ -1,18 +1,26 @@
+"""
+Module that contains input transform fumctions for data augmentation.
+"""
+
+
 from typing import Callable
-import random
 import torch
 from torch import Tensor
 from torch.types import Number
-from torch import nn
 
 from rezonance.logger import logger
 from rezonance.noise_generators import NoiseSynth
 
 Transform = Callable[[Tensor], Tensor]
+"""
+Callables on input tensors for data augmentation
+"""
 
 
 def noise(noise: NoiseSynth) -> Transform:
-
+    """
+    Create data augmentation transform that adds noise to input signal
+    """
     def transform_signal(input: Tensor) -> Tensor:
         input = input + noise.generate(input.size(0))
         return input / input.std()
@@ -21,7 +29,9 @@ def noise(noise: NoiseSynth) -> Transform:
 
 
 def mask(size: int, mask_value: Number) -> Transform:
-
+    """
+    Create data augmentation transform that mask out random time band in signal
+    """
     def transform_signal(input: Tensor) -> Tensor:
         input = input.clone()
 
@@ -39,7 +49,9 @@ def scaling(
     high: Number,
     buffer_size: int,
 ) -> Transform:
-
+    """
+    Create a gain envelop transform
+    """
     indice_multipliers = (high - low) * torch.linspace(
         0, 1, buffer_size
     ) + low
@@ -50,7 +62,9 @@ def scaling(
 def compose(
     *transforms: Transform,
 ) -> Transform:
-
+    """
+    Create a sequence of transforms
+    """
     def transform_signal(input: Tensor) -> Tensor:
         for transform in transforms:
             input = transform(input)
@@ -62,6 +76,10 @@ def compose(
 def random_choice(
     *transforms: Transform,
 ) -> Transform:
+    """
+    Create a transform that represent a uniformely distributed
+    choice between multiple transforms
+    """
     def transform_signal(input: Tensor) -> Tensor:
         choice = torch.randint(len(transforms), ())
         return transforms[choice](input)
