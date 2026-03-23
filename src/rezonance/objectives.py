@@ -185,7 +185,7 @@ class NoteClassifierObjective(Objective):
             loss_value = loss.item()
             accuracy = (
                 (predictions.argmax(-1) == labels).float().mean()
-            )
+            ).item()
             return loss, ClassificationMetric(loss_value, accuracy)
         return loss, None
 
