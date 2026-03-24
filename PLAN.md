@@ -4,8 +4,8 @@
 - [X] single sine waves
 - [X] noise generations
 - [X] single sine noisy dataset generation
-- [ ] complex harmonic profile dataset
-- [ ] complex harmonic profile dataset with noise
+- [x] complex harmonic profile dataset
+- [x] complex harmonic profile dataset with noise
 - [ ] fully parametric dataset (pitches, harmonics, phases, noises)
     - [ ] have attribute data class for generators
         - [ ] pitches (min, max, num)
@@ -14,13 +14,13 @@
 - [ ] some ideas can be expressed as data augmentation (like noise)
 # Training
 
-- [ ] normal linear model
-- [ ] convnet
+- [x] normal linear model
+- [x] convnet
 - [ ] polyphonic detection
 
 # Validation datasets
-- [ ] get validation dataset
-- [ ] get test dataset
+- [x] get validation dataset
+- [x] get test dataset
 
 # Comparison to classic pitch estimation methods
 - [ ] pYIN
