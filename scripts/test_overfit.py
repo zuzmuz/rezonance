@@ -3,6 +3,7 @@ import numpy as np
 import torch
 from torch import nn, optim
 
+from rezonance.logger import logger
 from rezonance.defaults import SAMPLE_RATE, BUFFER_SIZE, A4
 from rezonance.utils import current_device
 from rezonance import transforms
@@ -16,6 +17,7 @@ from rezonance.objectives import NoteClassifierObjective, CyclicPitchObjective
 def main():
 
     torch.set_default_device(current_device)
+    logger.info(f"Using device: {torch.get_default_device()}")
 
     min_pitch = 36
     max_pitch = 72  # not included
