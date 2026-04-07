@@ -3,7 +3,7 @@ Main training module for training and validation
 """
 
 import torch
-from torch import nn, optim
+from torch import Tensor, nn, optim
 from torch.utils.data import Dataset, DataLoader
 
 from rezonance.logger import logger
@@ -33,7 +33,7 @@ class Trainer:
         self.objective = objective
 
     def _train_one_epoch(
-        self, data_loader: DataLoader, log_batch: int = 0
+        self, data_loader: DataLoader[Tensor], log_batch: int = 0
     ) -> Metric | None:
 
         logger.debug("Training epoch")
